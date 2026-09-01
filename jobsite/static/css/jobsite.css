@@ -1,0 +1,58 @@
+.active-nav {
+    font-weight: 700 !important;
+    position: relative;
+}
+.active-nav::after {
+    content: "";
+    position: absolute;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.1rem;
+    height: 2px;
+    background: currentColor;
+}
+
+.scroll-gallery {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem;
+}
+.scroll-track {
+    display: flex;
+    gap: 1.5rem;
+    padding: 0 1.5rem;
+}
+.scroll-card {
+    flex: 0 0 280px;
+    scroll-snap-align: start;
+    background: #fff;
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 1px solid #eee;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.scroll-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 1rem 2rem rgba(0,0,0,0.08);
+}
+.scroll-card-img {
+    height: 180px;
+    background: #1a1a1a;
+}
+.scroll-card-caption {
+    padding: 1.25rem;
+}
+.scroll-card-caption h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.gradient-text {
+    background: linear-gradient(90deg, #6a7fd4 0%, #4a90e2 50%, #5b8fe8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+}

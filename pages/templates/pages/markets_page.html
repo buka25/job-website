@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block extra_css %}
+<style>
+    .market-card {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 1rem;
+        padding: 2rem;
+        height: 100%;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .market-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 1rem 2rem rgba(0,0,0,0.08);
+        border-color: transparent;
+    }
+    .market-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: rgba(47, 145, 226, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .market-icon i {
+        font-size: 26px;
+        color: #2F91E2;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="pt-5 pb-4">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">{{ page.title }}</h1>
+        <div class="fs-5 text-muted" style="max-width: 700px;">{{ page.intro|richtext }}</div>
+    </div>
+</section>
+
+<!-- MARKETS GRID -->
+<section class="container pb-5">
+    <div class="row g-4">
+        {% for item in page.market_items.all %}
+        <div class="col-md-6 col-lg-4">
+            <div class="market-card">
+                {% if item.icon %}
+                <div class="market-icon mb-4">
+                    <i class="bi bi-{{ item.icon }}"></i>
+                </div>
+                {% endif %}
+                <h4 class="fw-semibold mb-2">{{ item.title }}</h4>
+                <p class="text-muted mb-0">{{ item.description }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">Одоогоор салбар нэмэгдээгүй байна.</p>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

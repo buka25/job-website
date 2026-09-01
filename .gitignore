@@ -1,0 +1,25 @@
+# Django project
+/media/
+/static/
+*.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+.DS_Store
+*.swp
+/venv/
+.python-version
+
+# Node
+node_modules/
+npm-debug.log
+
+# Editors
+.idea/
+.vscode/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/

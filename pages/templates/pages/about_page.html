@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block extra_css %}
+<style>
+    .mission-band {
+        background: #1a1a1a;
+        color: #fff;
+    }
+    .mission-label {
+        color: #c8102e;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+    }
+    .team-card {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 1rem;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        height: 100%;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .team-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 1rem 2rem rgba(0,0,0,0.08);
+        border-color: transparent;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- INTRO -->
+<section class="pt-5 pb-4">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">{{ page.title }}</h1>
+        <div class="fs-5 text-muted" style="max-width: 700px;">{{ page.intro|richtext }}</div>
+    </div>
+</section>
+
+<!-- MISSION -->
+<section class="mission-band py-5 py-lg-6">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3">
+                <p class="mission-label text-uppercase small mb-0">Эрхэм зорилго</p>
+            </div>
+            <div class="col-lg-9">
+                <div class="fs-3 fw-light" style="max-width: 800px;">{{ page.mission|richtext }}</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- BODY / HISTORY -->
+<section class="py-5 py-lg-6">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                {{ page.body|richtext }}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- TEAM -->
+<section class="py-5 py-lg-6 bg-light">
+    <div class="container">
+        <h2 class="fw-bold mb-5">Манай баг хамт олон</h2>
+        <div class="row g-4">
+            {% for member in page.team_members.all %}
+            <div class="col-md-4 col-lg-3">
+                <div class="team-card">
+                    {% if member.photo %}
+                        {% image member.photo width-300 as member_img %}
+                        <img src="{{ member_img.url }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;" alt="{{ member.name }}">
+                    {% else %}
+                        <div class="rounded-circle bg-secondary bg-opacity-25 mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                            <span class="text-muted">Зураг</span>
+                        </div>
+                    {% endif %}
+                    <h5 class="mb-1">{{ member.name }}</h5>
+                    <p class="text-muted small mb-0">{{ member.position }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">Одоогоор багийн мэдээлэл нэмэгдээгүй байна.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+
+{% if page.hero_image %}
+    {% image page.hero_image width-1920 as hero_img %}
+{% endif %}
+
+<!-- STATEMENT -->
+<div class="container py-4">
+    <p class="fs-3" style="max-width: 700px;">{{ page.statement }}</p>
+</div>
+
+<!-- HERO -->
+<section class="text-white d-flex align-items-end"
+    style="min-height: 85vh; background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.6)), {% if hero_img %}url('{{ hero_img.url }}'){% else %}#1a1a1a{% endif %}; background-size: cover; background-position: center;">
+    <div class="container pb-5">
+        <h1 class="display-3 fw-bold" style="max-width: 800px;">{{ page.hero_title }}</h1>
+    </div>
+</section>
+
+<!-- IDEA CARDS (like "For 80 years...") -->
+<section class="py-5 py-lg-6">
+    <div class="container">
+        <h2 class="mb-5">{{ page.years_heading }}</h2>
+        <div class="row g-4">
+            {% for card in page.idea_cards.all %}
+            <div class="col-md-6 col-lg-3">
+                <a href="{{ card.link }}" class="text-decoration-none text-dark">
+                    {% if card.image %}
+                        {% image card.image width-500 as card_img %}
+                        <img src="{{ card_img.url }}" class="w-100 rounded-3 mb-3" style="height: 220px; object-fit: cover;" alt="{{ card.title }}">
+                    {% else %}
+                        <div class="bg-secondary bg-opacity-10 rounded-3 mb-3 d-flex align-items-center justify-content-center" style="height: 220px;">
+                            <span class="text-muted">Зураг</span>
+                        </div>
+                    {% endif %}
+                    {% if card.tag %}<span class="badge bg-dark mb-2">{{ card.tag }}</span>{% endif %}
+                    <h5>{{ card.title }}</h5>
+                    <p class="text-muted small">{{ card.description }}</p>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- OUR WORK - HORIZONTAL SCROLL GALLERY -->
+<section class="py-5 py-lg-6 bg-light">
+    <div class="container mb-4">
+        <h2 class="mb-0">Манай ажлууд</h2>
+        <p class="text-muted fs-5 mt-2">Бид хийсэн бодит төслүүдээрээ юу өөрчилж чадсаныг харуулна.</p>
+    </div>
+    <div class="scroll-gallery" id="scrollGallery">
+        <div class="scroll-track" id="scrollTrack">
+            {% for job in latest_jobs %}
+            <div class="scroll-card">
+                <div class="scroll-card-img d-flex align-items-center justify-content-center">
+                    <span class="text-white-50">Зураг</span>
+                </div>
+                <div class="scroll-card-caption"><h5>{{ job.title }}</h5></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- OUR PEOPLE -->
+<section class="py-5 py-lg-6">
+    <div class="container">
+        <h2 class="mb-2">{{ page.people_heading }}</h2>
+        <div class="text-muted fs-5 mb-5" style="max-width: 700px;">{{ page.people_subheading|richtext }}</div>
+        <div class="row g-4">
+            {% for person in page.people_cards.all %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    {% if person.photo %}
+                        {% image person.photo width-500 as person_img %}
+                        <img src="{{ person_img.url }}" class="card-img-top" style="height: 260px; object-fit: cover;" alt="{{ person.name }}">
+                    {% else %}
+                        <div class="bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 260px;">
+                            <span class="text-muted">Зураг</span>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title mb-0">{{ person.name }}</h5>
+                        <p class="text-muted small mb-3">{{ person.role }}</p>
+                        <p class="card-text fst-italic">"{{ person.quote }}"</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="py-5 text-white text-center" style="background: #1a1a1a;">
+    <div class="container">
+        <h2 class="mb-3">Манай багт нэгдээрэй</h2>
+        <a href="/jobs/" class="btn btn-light btn-lg px-5">Ажлын байр үзэх</a>
+    </div>
+</section>
+
+{% endblock %}

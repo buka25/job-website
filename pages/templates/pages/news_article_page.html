@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<div class="container my-5 py-4">
+    <a href="/news/" class="btn btn-outline-secondary btn-sm mb-4">&larr; Буцах</a>
+
+    <p class="text-muted">{{ page.date }}</p>
+    <h1 class="mb-4">{{ page.title }}</h1>
+
+    {% if page.image %}
+        {% image page.image width-1000 as hero_img %}
+        <img src="{{ hero_img.url }}" class="img-fluid rounded-3 mb-4" alt="{{ page.title }}">
+    {% endif %}
+
+    <div class="fs-5">{{ page.body|richtext }}</div>
+</div>
+{% endblock %}

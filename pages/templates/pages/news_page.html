@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block extra_css %}
+<style>
+    .news-card {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 1rem;
+        overflow: hidden;
+        height: 100%;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .news-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 1rem 2rem rgba(0,0,0,0.08);
+        border-color: transparent;
+    }
+    .news-card-img {
+        height: 220px;
+        overflow: hidden;
+        background: #f4f4f4;
+    }
+    .news-card-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    .news-card:hover .news-card-img img { transform: scale(1.08); }
+    .news-card-body { padding: 1.5rem; }
+    .news-date {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #c8102e;
+        font-weight: 700;
+    }
+    .news-read-more {
+        color: #1a1a1a;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.925rem;
+    }
+    .news-read-more:hover { color: #2F91E2; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="pt-5 pb-4">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">{{ page.title }}</h1>
+        <div class="fs-5 text-muted" style="max-width: 700px;">{{ page.intro|richtext }}</div>
+    </div>
+</section>
+
+<!-- NEWS GRID -->
+<section class="container pb-5">
+    <div class="row g-4">
+        {% for article in page.get_children.live.specific %}
+        <div class="col-md-6 col-lg-4">
+            <a href="{% pageurl article %}" class="text-decoration-none text-dark d-block h-100">
+                <div class="news-card">
+                    <div class="news-card-img">
+                        {% if article.image %}
+                            {% image article.image width-500 as article_img %}
+                            <img src="{{ article_img.url }}" alt="{{ article.title }}">
+                        {% else %}
+                            <div class="d-flex align-items-center justify-content-center h-100">
+                                <span class="text-muted">Зураг байхгүй</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="news-card-body">
+                        <p class="news-date mb-2">{{ article.date }}</p>
+                        <h5 class="fw-semibold mb-2">{{ article.title }}</h5>
+                        <p class="text-muted small mb-3">{{ article.intro }}</p>
+                        <span class="news-read-more">Дэлгэрэнгүй &rarr;</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <p class="text-muted">Одоогоор мэдээ байхгүй байна.</p>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

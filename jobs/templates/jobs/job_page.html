@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block extra_css %}
+<style>
+    .job-meta-pill {
+        background: #f4f4f4;
+        border-radius: 2rem;
+        padding: 0.5rem 1.1rem;
+        font-size: 0.925rem;
+        color: #333;
+        display: inline-flex;
+        align-items: center;
+    }
+    .job-meta-pill i { color: #2F91E2; margin-right: 0.5rem; }
+    .job-content-card {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 1rem;
+        padding: 2rem;
+    }
+    .job-sidebar-card {
+        background: #f8f8f8;
+        border-radius: 1rem;
+        padding: 2rem;
+        position: sticky;
+        top: 6rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5 py-4">
+    <a href="/jobs/" class="btn btn-outline-secondary btn-sm mb-4">&larr; Буцах</a>
+
+    <p class="text-uppercase fw-bold small mb-2" style="color:#c8102e; letter-spacing:0.06em;">{{ page.get_employment_type_display }}</p>
+    <h1 class="display-5 fw-bold mb-4">{{ page.title }}</h1>
+
+    <div class="d-flex flex-wrap gap-2 mb-5">
+        {% if page.location %}
+        <span class="job-meta-pill"><i class="bi bi-geo-alt"></i>{{ page.location }}</span>
+        {% endif %}
+        {% if page.salary %}
+        <span class="job-meta-pill"><i class="bi bi-cash-coin"></i>{{ page.salary }}</span>
+        {% endif %}
+        {% if page.deadline %}
+        <span class="job-meta-pill"><i class="bi bi-calendar-event"></i>Эцсийн хугацаа: {{ page.deadline }}</span>
+        {% endif %}
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="job-content-card mb-4">
+                <h4 class="fw-semibold mb-3">Тайлбар</h4>
+                <div>{{ page.description|richtext }}</div>
+            </div>
+            <div class="job-content-card">
+                <h4 class="fw-semibold mb-3">Тавигдах шаардлага</h4>
+                <div>{{ page.requirements|richtext }}</div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="job-sidebar-card">
+                <h5 class="fw-semibold mb-3">Хурдан мэдээлэл</h5>
+                <p class="mb-2"><i class="bi bi-geo-alt me-2 text-primary"></i>{{ page.location }}</p>
+                <p class="mb-2"><i class="bi bi-cash-coin me-2 text-primary"></i>{{ page.salary }}</p>
+                <p class="mb-2"><i class="bi bi-briefcase me-2 text-primary"></i>{{ page.get_employment_type_display }}</p>
+                {% if page.deadline %}
+                <p class="mb-4"><i class="bi bi-calendar-event me-2 text-primary"></i>{{ page.deadline }}</p>
+                {% endif %}
+                <a href="/contact/" class="btn btn-dark w-100">Анкет илгээх</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

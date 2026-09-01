@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+<div class="container my-5 py-5 text-center">
+    <h1 class="mb-3">Баярлалаа!</h1>
+    <div class="fs-5 text-muted">{{ page.thank_you_text|richtext }}</div>
+    <a href="/" class="btn btn-dark mt-4">Нүүр хуудас руу буцах</a>
+</div>
+{% endblock %}

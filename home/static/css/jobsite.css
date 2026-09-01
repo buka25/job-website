@@ -1,0 +1,47 @@
+.scroll-gallery {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    cursor: grab;
+    padding: 0 5% 1rem 5%;
+    scrollbar-width: none;
+}
+.scroll-gallery::-webkit-scrollbar {
+    display: none;
+}
+.scroll-gallery.dragging {
+    cursor: grabbing;
+    scroll-behavior: auto;
+}
+.scroll-track {
+    display: flex;
+    gap: 20px;
+}
+.scroll-card {
+    flex: 0 0 auto;
+    width: 420px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+.scroll-card-img {
+    width: 420px;
+    height: 500px;
+    background-color: #2c2c2c;
+}
+.scroll-card-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    color: white;
+}
+.scroll-card-caption h5 {
+    margin: 0;
+    font-weight: 600;
+}
+@media (max-width: 768px) {
+    .scroll-card, .scroll-card-img { width: 280px; height: 340px; }
+}
