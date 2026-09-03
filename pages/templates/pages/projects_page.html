@@ -100,7 +100,7 @@
 <!-- HERO -->
 <section class="pt-5 pb-4">
     <div class="container">
-        <h1 class="display-4 fw-bold mb-4">{{ page.title }}</h1>
+        <h1 class="display-4 mb-4">{{ page.title }}</h1>
         <div class="fs-5 text-muted" style="max-width: 700px;">{{ page.intro|richtext }}</div>
     </div>
 </section>
@@ -159,7 +159,7 @@
 
 <!-- SECTION HEADING -->
 <section class="container mb-4">
-    <h2 class="fw-bold mb-2">Тогтвортой нөлөө үзүүлэх</h2>
+    <h2 class="mb-2">Тогтвортой нөлөө үзүүлэх</h2>
     <p class="text-muted fs-5" style="max-width: 640px;">
         Хот, орон нутгийн ирээдүйг тодорхойлж буй бидний бодит төслүүдийг судлаарай.
     </p>
@@ -184,7 +184,7 @@
                 {% if item.category %}
                 <p class="project-category-tag mt-3 mb-1">{{ item.category }}</p>
                 {% endif %}
-                <h5 class="fw-semibold mb-1{% if not item.category %} mt-3{% endif %}">{{ item.title }}</h5>
+                <h5 class="mb-1{% if not item.category %} mt-3{% endif %}">{{ item.title }}</h5>
                 {% if item.location %}<p class="text-muted small mb-2">{{ item.location }}</p>{% endif %}
                 {% if item.description %}<p class="mb-0 small">{{ item.description }}</p>{% endif %}
             </div>

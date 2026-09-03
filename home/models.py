@@ -34,6 +34,14 @@ class HomePage(Page):
     )
     intro_heading = models.CharField(max_length=255, blank=True, default="Бидний тухай")
     intro_text = RichTextField(blank=True)
+    story_image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="'Бидний тухай' хэсэгт харагдах том зураг"
+    )
 
     years_heading = models.CharField(
         max_length=255, blank=True,
@@ -50,6 +58,7 @@ class HomePage(Page):
         FieldPanel("hero_image"),
         FieldPanel("intro_heading"),
         FieldPanel("intro_text"),
+        FieldPanel("story_image"),
         FieldPanel("years_heading"),
         InlinePanel("idea_cards", label="Карт (Our story/Careers г.м)"),
         FieldPanel("people_heading"),

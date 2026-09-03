@@ -34,7 +34,7 @@
 <!-- INTRO -->
 <section class="pt-5 pb-4">
     <div class="container">
-        <h1 class="display-4 fw-bold mb-4">{{ page.title }}</h1>
+        <h1 class="display-4 mb-4">{{ page.title }}</h1>
         <div class="fs-5 text-muted" style="max-width: 700px;">{{ page.intro|richtext }}</div>
     </div>
 </section>
@@ -67,7 +67,7 @@
 <!-- TEAM -->
 <section class="py-5 py-lg-6 bg-light">
     <div class="container">
-        <h2 class="fw-bold mb-5">Манай баг хамт олон</h2>
+        <h2 class="mb-5">Манай баг хамт олон</h2>
         <div class="row g-4">
             {% for member in page.team_members.all %}
             <div class="col-md-4 col-lg-3">

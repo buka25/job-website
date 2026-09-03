@@ -1,52 +1,211 @@
 {% extends "base.html" %}
 {% load wagtailcore_tags wagtailimages_tags %}
 
+{% block extra_css %}
+<style>
+    .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.8rem;
+        color: #757575;
+        font-weight: 600;
+    }
+    .story-img {
+        width: 100%;
+        height: 480px;
+        object-fit: cover;
+        border-radius: 0.5rem;
+    }
+    .pill-btn {
+        border: 1px solid #1a1a1a;
+        border-radius: 2rem;
+        padding: 0.7rem 1.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        text-decoration: none;
+        color: #1a1a1a;
+        font-weight: 500;
+        transition: background 0.2s ease, color 0.2s ease;
+        white-space: nowrap;
+    }
+    .pill-btn:hover {
+        background: #1a1a1a;
+        color: #fff;
+    }
+
+    /* Issues-style colour band */
+    .issues-band { background: #111; }
+    .issue-card {
+        border-radius: 1rem;
+        overflow: hidden;
+        position: relative;
+        min-height: 460px;
+        padding: 1.75rem;
+        display: flex;
+        flex-direction: column;
+        color: #111;
+    }
+    .issue-card .issue-tag {
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        font-weight: 600;
+        opacity: 0.75;
+    }
+    .issue-card h3 {
+        margin-top: 0.75rem;
+        font-size: 1.6rem;
+        max-width: 90%;
+    }
+    .issue-card .issue-img-wrap {
+        margin-top: auto;
+        border-radius: 50% 50% 0 0 / 60% 60% 0 0;
+        overflow: hidden;
+        height: 220px;
+    }
+    .issue-card .issue-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .issue-card.tone-1 { background: #e6222c; }
+    .issue-card.tone-2 { background: #1e9bd7; }
+    .issue-card.tone-3 { background: #e66e23; }
+
+    /* People row - darken + quote overlay on hover */
+    .people-photo-wrap {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        margin-bottom: 1rem;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    .people-photo-wrap img,
+    .people-photo-wrap .people-photo-placeholder {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+    .people-card:hover .people-photo-wrap img {
+        transform: scale(1.05);
+    }
+    .people-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(10, 10, 10, 0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+        text-align: center;
+        opacity: 0;
+        transition: background 0.35s ease, opacity 0.35s ease;
+    }
+    .people-card:hover .people-overlay {
+        background: rgba(10, 10, 10, 0.6);
+        opacity: 1;
+    }
+    .people-overlay p {
+        color: #fff;
+        transform: translateY(8px);
+        transition: transform 0.35s ease;
+    }
+    .people-card:hover .people-overlay p {
+        transform: translateY(0);
+    }
+    .people-photo-placeholder {
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        background: #f2f2f2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 
 {% if page.hero_image %}
     {% image page.hero_image width-1920 as hero_img %}
 {% endif %}
 
-<!-- STATEMENT -->
-<div class="container py-4">
-    <p class="fs-3" style="max-width: 700px;">{{ page.statement }}</p>
-</div>
-
 <!-- HERO -->
-<section class="text-white d-flex align-items-end"
-    style="min-height: 85vh; background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.6)), {% if hero_img %}url('{{ hero_img.url }}'){% else %}#1a1a1a{% endif %}; background-size: cover; background-position: center;">
-    <div class="container pb-5">
-        <h1 class="display-3 fw-bold" style="max-width: 800px;">{{ page.hero_title }}</h1>
+<section class="pt-5 pb-4">
+    <div class="container">
+        <h1 class="display-3" style="max-width: 900px;">{{ page.hero_title }}</h1>
     </div>
 </section>
 
-<!-- IDEA CARDS (like "For 80 years...") -->
+{% if hero_img %}
+<section class="mb-5">
+    <img src="{{ hero_img.url }}" class="w-100" style="max-height: 70vh; object-fit: cover;" alt="{{ page.hero_title }}">
+</section>
+{% endif %}
+
+<!-- OUR STORY -->
 <section class="py-5 py-lg-6">
     <div class="container">
-        <h2 class="mb-5">{{ page.years_heading }}</h2>
+        <div class="row align-items-end mb-4">
+            <div class="col-lg-8">
+                <p class="eyebrow mb-2">Бидний тухай</p>
+                <h2 class="mb-3">{{ page.intro_heading }}</h2>
+                <div class="fs-5 text-muted" style="max-width: 640px;">{{ page.intro_text|richtext }}</div>
+            </div>
+        </div>
+        {% if page.story_image %}
+            {% image page.story_image width-1600 as story_img %}
+            <img src="{{ story_img.url }}" class="story-img" alt="{{ page.intro_heading }}">
+        {% else %}
+            <div class="story-img bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center">
+                <span class="text-muted">Зураг</span>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ISSUES-STYLE CARDS (idea cards) -->
+{% if page.idea_cards.all %}
+<section class="issues-band py-5 py-lg-6">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
+            <div>
+                <h2 class="text-white mb-2">{{ page.years_heading }}</h2>
+            </div>
+        </div>
         <div class="row g-4">
             {% for card in page.idea_cards.all %}
-            <div class="col-md-6 col-lg-3">
-                <a href="{{ card.link }}" class="text-decoration-none text-dark">
-                    {% if card.image %}
-                        {% image card.image width-500 as card_img %}
-                        <img src="{{ card_img.url }}" class="w-100 rounded-3 mb-3" style="height: 220px; object-fit: cover;" alt="{{ card.title }}">
-                    {% else %}
-                        <div class="bg-secondary bg-opacity-10 rounded-3 mb-3 d-flex align-items-center justify-content-center" style="height: 220px;">
-                            <span class="text-muted">Зураг</span>
+            <div class="col-md-6 col-lg-4">
+                <a href="{{ card.link }}" class="text-decoration-none">
+                    <div class="issue-card tone-{% cycle '1' '2' '3' %}">
+                        {% if card.tag %}<span class="issue-tag">{{ card.tag }}</span>{% endif %}
+                        <h3>{{ card.title }}</h3>
+                        <div class="issue-img-wrap">
+                            {% if card.image %}
+                                {% image card.image width-500 as card_img %}
+                                <img src="{{ card_img.url }}" alt="{{ card.title }}">
+                            {% else %}
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.2);">
+                                    <span>{{ card.description }}</span>
+                                </div>
+                            {% endif %}
                         </div>
-                    {% endif %}
-                    {% if card.tag %}<span class="badge bg-dark mb-2">{{ card.tag }}</span>{% endif %}
-                    <h5>{{ card.title }}</h5>
-                    <p class="text-muted small">{{ card.description }}</p>
+                    </div>
                 </a>
             </div>
             {% endfor %}
         </div>
     </div>
 </section>
+{% endif %}
 
 <!-- OUR WORK - HORIZONTAL SCROLL GALLERY -->
+{% if latest_jobs %}
 <section class="py-5 py-lg-6 bg-light">
     <div class="container mb-4">
         <h2 class="mb-0">Манай ажлууд</h2>
@@ -65,29 +224,39 @@
         </div>
     </div>
 </section>
+{% endif %}
 
 <!-- OUR PEOPLE -->
 <section class="py-5 py-lg-6">
     <div class="container">
-        <h2 class="mb-2">{{ page.people_heading }}</h2>
-        <div class="text-muted fs-5 mb-5" style="max-width: 700px;">{{ page.people_subheading|richtext }}</div>
-        <div class="row g-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-end mb-5 gap-3">
+            <div>
+                <h2 class="mb-2">{{ page.people_heading }}</h2>
+                <div class="text-muted fs-5" style="max-width: 640px;">{{ page.people_subheading|richtext }}</div>
+            </div>
+            <a href="/jobs/" class="pill-btn">Ажлын байр үзэх <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4">
             {% for person in page.people_cards.all %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    {% if person.photo %}
-                        {% image person.photo width-500 as person_img %}
-                        <img src="{{ person_img.url }}" class="card-img-top" style="height: 260px; object-fit: cover;" alt="{{ person.name }}">
-                    {% else %}
-                        <div class="bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 260px;">
-                            <span class="text-muted">Зураг</span>
+            <div class="col">
+                <div class="people-card">
+                    <div class="people-photo-wrap">
+                        {% if person.photo %}
+                            {% image person.photo width-400 as person_img %}
+                            <img src="{{ person_img.url }}" alt="{{ person.name }}">
+                        {% else %}
+                            <div class="people-photo-placeholder">
+                                <span class="text-muted">Зураг</span>
+                            </div>
+                        {% endif %}
+                        {% if person.quote %}
+                        <div class="people-overlay">
+                            <p class="small fst-italic mb-0">"{{ person.quote }}"</p>
                         </div>
-                    {% endif %}
-                    <div class="card-body">
-                        <h5 class="card-title mb-0">{{ person.name }}</h5>
-                        <p class="text-muted small mb-3">{{ person.role }}</p>
-                        <p class="card-text fst-italic">"{{ person.quote }}"</p>
+                        {% endif %}
                     </div>
+                    <h6 class="mb-0">{{ person.name }}</h6>
+                    <p class="text-muted small mb-0">{{ person.role }}</p>
                 </div>
             </div>
             {% endfor %}
@@ -98,7 +267,7 @@
 <!-- CTA -->
 <section class="py-5 text-white text-center" style="background: #1a1a1a;">
     <div class="container">
-        <h2 class="mb-3">Манай багт нэгдээрэй</h2>
+        <h2 class="mb-3 text-white">Манай багт нэгдээрэй</h2>
         <a href="/jobs/" class="btn btn-light btn-lg px-5">Ажлын байр үзэх</a>
     </div>
 </section>

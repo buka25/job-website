@@ -34,7 +34,7 @@
     <a href="/jobs/" class="btn btn-outline-secondary btn-sm mb-4">&larr; Буцах</a>
 
     <p class="text-uppercase fw-bold small mb-2" style="color:#c8102e; letter-spacing:0.06em;">{{ page.get_employment_type_display }}</p>
-    <h1 class="display-5 fw-bold mb-4">{{ page.title }}</h1>
+    <h1 class="display-5 mb-4">{{ page.title }}</h1>
 
     <div class="d-flex flex-wrap gap-2 mb-5">
         {% if page.location %}
@@ -51,27 +51,47 @@
     <div class="row g-4">
         <div class="col-lg-8">
             <div class="job-content-card mb-4">
-                <h4 class="fw-semibold mb-3">Тайлбар</h4>
+                <h4 class="mb-3">Тайлбар</h4>
                 <div>{{ page.description|richtext }}</div>
             </div>
             <div class="job-content-card">
-                <h4 class="fw-semibold mb-3">Тавигдах шаардлага</h4>
+                <h4 class="mb-3">Тавигдах шаардлага</h4>
                 <div>{{ page.requirements|richtext }}</div>
             </div>
         </div>
 
         <div class="col-lg-4">
             <div class="job-sidebar-card">
-                <h5 class="fw-semibold mb-3">Хурдан мэдээлэл</h5>
+                <h5 class="mb-3">Хурдан мэдээлэл</h5>
                 <p class="mb-2"><i class="bi bi-geo-alt me-2 text-primary"></i>{{ page.location }}</p>
                 <p class="mb-2"><i class="bi bi-cash-coin me-2 text-primary"></i>{{ page.salary }}</p>
                 <p class="mb-2"><i class="bi bi-briefcase me-2 text-primary"></i>{{ page.get_employment_type_display }}</p>
                 {% if page.deadline %}
                 <p class="mb-4"><i class="bi bi-calendar-event me-2 text-primary"></i>{{ page.deadline }}</p>
                 {% endif %}
-                <a href="/contact/" class="btn btn-dark w-100">Анкет илгээх</a>
+                <a href="#apply" class="btn btn-dark w-100">Анкет илгээх</a>
             </div>
         </div>
+    </div>
+
+    <div id="apply" class="job-content-card mt-4">
+        <h4 class="mb-3">Ажилд орох хүсэлт илгээх</h4>
+        {% if application_submitted %}
+        <div class="alert alert-success mb-0">Таны анкет амжилттай илгээгдлээ. Бид тантай удахгүй холбогдоно.</div>
+        {% else %}
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% for field in application_form %}
+            <div class="mb-3">
+                <label class="form-label fw-medium" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                {{ field }}
+                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-dark px-4">Илгээх</button>
+        </form>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
