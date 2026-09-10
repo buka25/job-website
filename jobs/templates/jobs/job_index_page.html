@@ -4,22 +4,22 @@
 {% block extra_css %}
 <style>
     .filter-pill {
-        border: 1px solid #dcdcdc;
-        background: #fff;
-        color: #333;
+        border: 1px solid rgba(245, 245, 243, 0.2);
+        background: transparent;
+        color: #f5f5f3;
         font-weight: 500;
         transition: all 0.2s ease;
     }
-    .filter-pill:hover { border-color: #2F91E2; color: #2F91E2; }
+    .filter-pill:hover { border-color: #c8102e; color: #c8102e; }
     .filter-pill.active {
-        background: #1a1a1a;
+        background: #c8102e;
         color: #fff;
-        border-color: #1a1a1a;
+        border-color: #c8102e;
     }
 
     .job-card {
-        background: #fff;
-        border: 1px solid #eee;
+        background: #151512;
+        border: 1px solid rgba(245, 245, 243, 0.12);
         border-radius: 1rem;
         padding: 1.75rem;
         height: 100%;
@@ -27,7 +27,7 @@
     }
     .job-card:hover {
         transform: translateY(-6px);
-        box-shadow: 0 1rem 2rem rgba(0,0,0,0.08);
+        box-shadow: 0 1rem 2rem rgba(0,0,0,0.4);
         border-color: transparent;
     }
     .job-type-tag {
@@ -38,10 +38,10 @@
         font-weight: 700;
     }
     .job-card .job-meta {
-        color: #666;
+        color: #a8a8a3;
         font-size: 0.925rem;
     }
-    .job-card .job-meta i { width: 1.1rem; color: #2F91E2; }
+    .job-card .job-meta i { width: 1.1rem; color: #c8102e; }
 </style>
 {% endblock %}
 

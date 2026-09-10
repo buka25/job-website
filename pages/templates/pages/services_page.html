@@ -1,33 +1,72 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags %}
+{% load wagtailcore_tags wagtailimages_tags %}
 
 {% block extra_css %}
 <style>
-    .service-card {
-        background: #fff;
-        border: 1px solid #eee;
-        border-radius: 1rem;
-        padding: 2rem;
+    .expertise-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2px;
+    }
+    @media (max-width: 900px) {
+        .expertise-grid { grid-template-columns: 1fr; }
+    }
+    .expertise-card {
+        position: relative;
+        height: 420px;
+        overflow: hidden;
+        display: block;
+        text-decoration: none;
+        color: #f5f5f3;
+    }
+    .expertise-card img {
+        width: 100%;
         height: 100%;
-        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        object-fit: cover;
+        transition: transform 0.6s ease;
     }
-    .service-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 1rem 2rem rgba(0,0,0,0.08);
-        border-color: transparent;
+    .expertise-card:hover img {
+        transform: scale(1.06);
     }
-    .service-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: rgba(200, 16, 46, 0.08);
+    .expertise-card .expertise-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 55%, rgba(0,0,0,0.05) 100%);
+    }
+    .expertise-card .expertise-body {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 1.75rem;
+    }
+    .expertise-card h3 {
+        font-size: 1.15rem;
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.01em;
+    }
+    .expertise-card .view-more {
+        font-size: 0.8rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        opacity: 0;
+        transform: translateY(6px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .expertise-card:hover .view-more {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .expertise-card .expertise-placeholder {
+        width: 100%;
+        height: 100%;
+        background: #151512;
         display: flex;
         align-items: center;
         justify-content: center;
-    }
-    .service-icon i {
-        font-size: 26px;
-        color: #c8102e;
     }
 </style>
 {% endblock %}
@@ -42,25 +81,27 @@
     </div>
 </section>
 
-<!-- SERVICES GRID -->
-<section class="container pb-5">
-    <div class="row g-4">
-        {% for item in page.service_items.all %}
-        <div class="col-md-6 col-lg-4">
-            <div class="service-card">
-                {% if item.icon %}
-                <div class="service-icon mb-4">
-                    <i class="bi bi-{{ item.icon }}"></i>
-                </div>
-                {% endif %}
-                <h4 class="mb-2">{{ item.title }}</h4>
-                <p class="text-muted mb-0">{{ item.description }}</p>
+<!-- EXPERTISE GRID -->
+<div class="expertise-grid">
+    {% for item in page.service_items.all %}
+    <a href="#" class="expertise-card reveal-on-scroll">
+        {% if item.image %}
+            {% image item.image width-900 as item_img %}
+            <img src="{{ item_img.url }}" alt="{{ item.title }}" loading="lazy">
+        {% else %}
+            <div class="expertise-placeholder">
+                {% if item.icon %}<i class="bi bi-{{ item.icon }}" style="font-size: 40px; color: rgba(245,245,243,0.3);"></i>{% endif %}
             </div>
+        {% endif %}
+        <div class="expertise-overlay"></div>
+        <div class="expertise-body">
+            <h3>{{ item.title }}</h3>
+            <span class="view-more">View More <i class="bi bi-arrow-right"></i></span>
         </div>
-        {% empty %}
-        <p class="text-muted">Одоогоор үйлчилгээ нэмэгдээгүй байна.</p>
-        {% endfor %}
-    </div>
-</section>
+    </a>
+    {% empty %}
+    <p class="text-muted container">Одоогоор үйлчилгээ нэмэгдээгүй байна.</p>
+    {% endfor %}
+</div>
 
 {% endblock %}

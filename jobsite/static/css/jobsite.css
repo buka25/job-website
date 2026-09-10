@@ -1,33 +1,169 @@
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'Spectral', Georgia, serif !important;
-    font-weight: 400 !important;
-    letter-spacing: -0.01em;
+:root {
+    --bg: #0c0c0c;
+    --bg-alt: #151512;
+    --text: #f5f5f3;
+    --text-muted: #a8a8a3;
+    --border: rgba(245, 245, 243, 0.12);
+    --accent: #c8102e;
 }
 
+/* ---------- Base / typography ---------- */
+html, body {
+    background: var(--bg);
+    color: var(--text);
+}
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+}
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', -apple-system, sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em;
+}
+h1.display-1, h1.display-2, h1.display-3, h1.display-4, h1.display-5 {
+    font-weight: 800 !important;
+}
+a { color: var(--text); }
+a:hover { color: var(--accent); }
+
+/* ---------- Bootstrap surface overrides (dark theme flip) ---------- */
+.bg-white, .bg-light {
+    background: var(--bg-alt) !important;
+}
+.text-dark { color: var(--text) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-black { color: var(--text) !important; }
+hr, .border, .border-top, .border-bottom, .border-start, .border-end {
+    border-color: var(--border) !important;
+}
+
+.card,
+.service-card, .market-card, .job-card, .team-card, .news-card,
+.job-content-card, .job-sidebar-card, .project-card,
+.scroll-card {
+    background: var(--bg-alt);
+    color: var(--text);
+    border-color: var(--border);
+}
+.card .text-muted, .job-meta { color: var(--text-muted) !important; }
+
+.form-control, .form-select {
+    background: var(--bg-alt);
+    border-color: var(--border);
+    color: var(--text);
+}
+.form-control:focus, .form-select:focus {
+    background: var(--bg-alt);
+    border-color: var(--accent);
+    color: var(--text);
+    box-shadow: 0 0 0 0.2rem rgba(200, 16, 46, 0.2);
+}
+.form-control::placeholder { color: var(--text-muted); }
+.form-label { color: var(--text); }
+
+.btn-dark {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+.btn-dark:hover {
+    background: #a80d26;
+    border-color: #a80d26;
+}
+.btn-outline-secondary, .btn-outline-dark {
+    color: var(--text);
+    border-color: var(--border);
+}
+.btn-outline-secondary:hover, .btn-outline-dark:hover {
+    background: var(--bg-alt);
+    color: var(--text);
+    border-color: var(--text);
+}
+
+/* ---------- Navbar ---------- */
+.site-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+.site-navbar.is-scrolled {
+    background: rgba(12, 12, 12, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+}
+.site-navbar .navbar-toggler {
+    border-color: var(--border);
+}
+.site-navbar .navbar-toggler-icon {
+    filter: invert(1);
+}
+.site-navbar .collapse.show,
+.site-navbar .collapsing {
+    background: rgba(12, 12, 12, 0.98);
+}
+body { padding-top: 76px; }
+
 .navbar .nav-link {
-    color: #1a1a1a;
+    color: var(--text);
     transition: color 0.15s ease;
 }
 .navbar .nav-link:hover,
 .navbar .nav-link:focus {
-    color: #c8102e;
+    color: var(--accent);
 }
 
-.active-nav {
-    font-weight: 700 !important;
-    color: #c8102e !important;
+.nav-underline {
     position: relative;
+    display: inline-block;
 }
-.active-nav::after {
+.nav-underline::after {
     content: "";
     position: absolute;
     left: 0.5rem;
     right: 0.5rem;
     bottom: 0.1rem;
     height: 2px;
-    background: #c8102e;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+}
+.nav-underline:hover::after {
+    transform: scaleX(1);
 }
 
+.active-nav {
+    font-weight: 700 !important;
+    color: var(--accent) !important;
+}
+.active-nav.nav-underline::after {
+    transform: scaleX(1);
+}
+
+/* ---------- Footer ---------- */
+.footer-social a {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    transition: color 0.2s ease;
+}
+.footer-social a:hover { color: var(--text); }
+
+/* ---------- Scroll-reveal ---------- */
+.reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ---------- Homepage scroll gallery (jobs) ---------- */
 .scroll-gallery {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -42,19 +178,17 @@ h1, h2, h3, h4, h5, h6 {
 .scroll-card {
     flex: 0 0 280px;
     scroll-snap-align: start;
-    background: #fff;
     border-radius: 1rem;
     overflow: hidden;
-    border: 1px solid #eee;
     transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .scroll-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 1rem 2rem rgba(0,0,0,0.08);
+    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.4);
 }
 .scroll-card-img {
     height: 180px;
-    background: #1a1a1a;
+    background: #050505;
 }
 .scroll-card-caption {
     padding: 1.25rem;
@@ -65,7 +199,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gradient-text {
-    background: linear-gradient(90deg, #6a7fd4 0%, #4a90e2 50%, #5b8fe8 100%);
+    background: linear-gradient(90deg, #f5f5f3 0%, #c8102e 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

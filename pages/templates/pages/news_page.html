@@ -3,46 +3,86 @@
 
 {% block extra_css %}
 <style>
-    .news-card {
-        background: #fff;
-        border: 1px solid #eee;
-        border-radius: 1rem;
-        overflow: hidden;
-        height: 100%;
-        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    .news-swiper {
+        padding: 0 48px 3rem;
     }
-    .news-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 1rem 2rem rgba(0,0,0,0.08);
-        border-color: transparent;
+    @media (max-width: 600px) {
+        .news-swiper { padding: 0 24px 3rem; }
+    }
+    .news-card {
+        display: block;
+        text-decoration: none;
+        color: #f5f5f3;
     }
     .news-card-img {
-        height: 220px;
+        aspect-ratio: 16 / 9;
         overflow: hidden;
-        background: #f4f4f4;
+        background: #151512;
+        position: relative;
+        border-radius: 0.25rem;
     }
     .news-card-img img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.5s ease;
+        transition: transform 0.4s ease, opacity 0.4s ease;
     }
-    .news-card:hover .news-card-img img { transform: scale(1.08); }
-    .news-card-body { padding: 1.5rem; }
+    .news-card:hover .news-card-img img {
+        transform: scale(1.02);
+    }
+    .photographer-credit {
+        position: absolute;
+        right: 0.6rem;
+        bottom: 0.5rem;
+        font-size: 0.65rem;
+        letter-spacing: 0.03em;
+        color: rgba(245, 245, 243, 0.8);
+        text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    }
     .news-date {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #c8102e;
-        font-weight: 700;
+        color: #a8a8a3;
+        margin: 1rem 0 0.4rem;
+    }
+    .news-card h5 {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
     }
     .news-read-more {
-        color: #1a1a1a;
+        color: #f5f5f3;
         text-decoration: none;
-        font-weight: 600;
-        font-size: 0.925rem;
+        font-weight: 500;
+        font-size: 0.85rem;
+        letter-spacing: 0.02em;
     }
-    .news-read-more:hover { color: #2F91E2; }
+    .news-card:hover .news-read-more { color: #c8102e; }
+
+    .news-nav-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .news-counter {
+        font-size: 0.9rem;
+        color: #a8a8a3;
+        letter-spacing: 0.04em;
+    }
+    .news-swiper-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 1px solid rgba(245, 245, 243, 0.25);
+        background: transparent;
+        color: #f5f5f3;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.2s ease, color 0.2s ease;
+    }
+    .news-swiper-btn:hover { border-color: #c8102e; color: #c8102e; }
+    .news-swiper-btn.swiper-button-disabled { opacity: 0.3; pointer-events: none; }
 </style>
 {% endblock %}
 
@@ -51,41 +91,80 @@
 <!-- HERO -->
 <section class="pt-5 pb-4">
     <div class="container">
-        <h1 class="display-4 mb-4">{{ page.title }}</h1>
-        <div class="fs-5 text-muted" style="max-width: 700px;">{{ page.intro|richtext }}</div>
+        <div class="news-nav-row mb-4">
+            <div>
+                <h1 class="display-4 mb-4">{{ page.title }}</h1>
+                <div class="fs-5 text-muted" style="max-width: 700px;">{{ page.intro|richtext }}</div>
+            </div>
+        </div>
     </div>
 </section>
 
-<!-- NEWS GRID -->
-<section class="container pb-5">
-    <div class="row g-4">
-        {% for article in page.get_children.live.specific %}
-        <div class="col-md-6 col-lg-4">
-            <a href="{% pageurl article %}" class="text-decoration-none text-dark d-block h-100">
-                <div class="news-card">
+{% with articles=page.get_children.live.specific %}
+{% if articles %}
+<section class="container-fluid mb-3">
+    <div class="container d-flex justify-content-between align-items-center mb-3">
+        <span class="news-counter"><span id="newsCounterCurrent">01</span>/{{ articles|length|stringformat:"02d" }}</span>
+        <div class="d-flex gap-2">
+            <button class="news-swiper-btn" id="newsPrev" aria-label="Previous"><i class="bi bi-arrow-left"></i></button>
+            <button class="news-swiper-btn" id="newsNext" aria-label="Next"><i class="bi bi-arrow-right"></i></button>
+        </div>
+    </div>
+    <div class="swiper news-swiper">
+        <div class="swiper-wrapper">
+            {% for article in articles %}
+            <div class="swiper-slide" style="width: 340px;">
+                <a href="{% pageurl article %}" class="news-card">
                     <div class="news-card-img">
                         {% if article.image %}
-                            {% image article.image width-500 as article_img %}
-                            <img src="{{ article_img.url }}" alt="{{ article.title }}">
+                            {% image article.image width-800 format-webp as article_img %}
+                            <img src="{{ article_img.url }}" alt="{{ article.title }}" loading="lazy">
                         {% else %}
                             <div class="d-flex align-items-center justify-content-center h-100">
                                 <span class="text-muted">Зураг байхгүй</span>
                             </div>
                         {% endif %}
+                        {% if article.photographer_credit %}
+                        <span class="photographer-credit">{{ article.photographer_credit }}</span>
+                        {% endif %}
                     </div>
-                    <div class="news-card-body">
-                        <p class="news-date mb-2">{{ article.date }}</p>
-                        <h5 class="mb-2">{{ article.title }}</h5>
-                        <p class="text-muted small mb-3">{{ article.intro }}</p>
-                        <span class="news-read-more">Дэлгэрэнгүй &rarr;</span>
-                    </div>
-                </div>
-            </a>
+                    <p class="news-date">{{ article.date }}</p>
+                    <h5>{{ article.title }}</h5>
+                    <span class="news-read-more">Дэлгэрэнгүй &rarr;</span>
+                </a>
+            </div>
+            {% endfor %}
         </div>
-        {% empty %}
-        <p class="text-muted">Одоогоор мэдээ байхгүй байна.</p>
-        {% endfor %}
     </div>
 </section>
+{% else %}
+<section class="container pb-5">
+    <p class="text-muted">Одоогоор мэдээ байхгүй байна.</p>
+</section>
+{% endif %}
+{% endwith %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        var el = document.querySelector('.news-swiper');
+        if (!el || typeof Swiper === 'undefined') return;
+        var swiper = new Swiper(el, {
+            slidesPerView: 'auto',
+            spaceBetween: 24,
+            navigation: {
+                nextEl: '#newsNext',
+                prevEl: '#newsPrev',
+            },
+        });
+        var counter = document.getElementById('newsCounterCurrent');
+        if (counter) {
+            swiper.on('slideChange', function () {
+                counter.textContent = String(swiper.activeIndex + 1).padStart(2, '0');
+            });
+        }
+    })();
+</script>
 {% endblock %}

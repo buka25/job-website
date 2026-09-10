@@ -58,17 +58,17 @@
     }
 
     .filter-pill {
-        border: 1px solid #dcdcdc;
-        background: #fff;
-        color: #333;
+        border: 1px solid rgba(245, 245, 243, 0.2);
+        background: transparent;
+        color: #f5f5f3;
         font-weight: 500;
         transition: all 0.2s ease;
     }
-    .filter-pill:hover { border-color: #2F91E2; color: #2F91E2; }
+    .filter-pill:hover { border-color: #c8102e; color: #c8102e; }
     .filter-pill.active {
-        background: #1a1a1a;
+        background: #c8102e;
         color: #fff;
-        border-color: #1a1a1a;
+        border-color: #c8102e;
     }
 
     .project-card { color: inherit; }
@@ -76,7 +76,7 @@
         overflow: hidden;
         border-radius: 0.75rem;
         height: 260px;
-        background: #f4f4f4;
+        background: #151512;
     }
     .project-card-img img {
         width: 100%;
@@ -174,7 +174,7 @@
                 <div class="project-card-img">
                     {% if item.image %}
                         {% image item.image width-500 as project_img %}
-                        <img src="{{ project_img.url }}" alt="{{ item.title }}">
+                        <img src="{{ project_img.url }}" alt="{{ item.title }}" loading="lazy">
                     {% else %}
                         <div class="d-flex align-items-center justify-content-center h-100">
                             <span class="text-muted">Зураг байхгүй</span>

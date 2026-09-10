@@ -17,21 +17,21 @@
         border-radius: 0.5rem;
     }
     .pill-btn {
-        border: 1px solid #1a1a1a;
+        border: 1px solid #f5f5f3;
         border-radius: 2rem;
         padding: 0.7rem 1.5rem;
         display: inline-flex;
         align-items: center;
         gap: 0.6rem;
         text-decoration: none;
-        color: #1a1a1a;
+        color: #f5f5f3;
         font-weight: 500;
         transition: background 0.2s ease, color 0.2s ease;
         white-space: nowrap;
     }
     .pill-btn:hover {
-        background: #1a1a1a;
-        color: #fff;
+        background: #f5f5f3;
+        color: #0c0c0c;
     }
 
     /* Issues-style colour band */
@@ -121,7 +121,7 @@
         aspect-ratio: 3 / 4;
         border-radius: 0.5rem;
         margin-bottom: 1rem;
-        background: #f2f2f2;
+        background: #151512;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -160,7 +160,7 @@
         </div>
         {% if page.story_image %}
             {% image page.story_image width-1600 as story_img %}
-            <img src="{{ story_img.url }}" class="story-img" alt="{{ page.intro_heading }}">
+            <img src="{{ story_img.url }}" class="story-img" alt="{{ page.intro_heading }}" loading="lazy">
         {% else %}
             <div class="story-img bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center">
                 <span class="text-muted">Зураг</span>
@@ -188,7 +188,7 @@
                         <div class="issue-img-wrap">
                             {% if card.image %}
                                 {% image card.image width-500 as card_img %}
-                                <img src="{{ card_img.url }}" alt="{{ card.title }}">
+                                <img src="{{ card_img.url }}" alt="{{ card.title }}" loading="lazy">
                             {% else %}
                                 <div class="w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.2);">
                                     <span>{{ card.description }}</span>
@@ -243,7 +243,7 @@
                     <div class="people-photo-wrap">
                         {% if person.photo %}
                             {% image person.photo width-400 as person_img %}
-                            <img src="{{ person_img.url }}" alt="{{ person.name }}">
+                            <img src="{{ person_img.url }}" alt="{{ person.name }}" loading="lazy">
                         {% else %}
                             <div class="people-photo-placeholder">
                                 <span class="text-muted">Зураг</span>

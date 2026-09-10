@@ -59,11 +59,20 @@ class ServiceItem(Orderable):
         blank=True,
         help_text="Bootstrap Icon нэр, жишээ: gear, briefcase, graph-up"
     )
+    image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Expertise card-ын дэвсгэр зураг"
+    )
 
     panels = [
         FieldPanel("title"),
         FieldPanel("description"),
         FieldPanel("icon"),
+        FieldPanel("image"),
     ]
 
 class ProjectsPage(Page):
@@ -145,11 +154,16 @@ class NewsArticlePage(Page):
         on_delete=models.SET_NULL,
         related_name="+"
     )
+    photographer_credit = models.CharField(
+        max_length=255, blank=True,
+        help_text="Ж: Зураг: Б.Бат"
+    )
 
     content_panels = Page.content_panels + [
         FieldPanel("date"),
         FieldPanel("intro"),
         FieldPanel("image"),
+        FieldPanel("photographer_credit"),
         FieldPanel("body"),
     ]
 
@@ -158,11 +172,20 @@ class NewsArticlePage(Page):
 class AboutPage(Page):
     """Бидний тухай хуудас"""
     intro = RichTextField(blank=True)
+    hero_image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Судиогийн танилцуулга хэсгийн зураг"
+    )
     mission = RichTextField(blank=True, help_text="Эрхэм зорилго")
     body = RichTextField(blank=True, help_text="Компанийн түүх, дэлгэрэнгүй танилцуулга")
 
     content_panels = Page.content_panels + [
         FieldPanel("intro"),
+        FieldPanel("hero_image"),
         FieldPanel("mission"),
         FieldPanel("body"),
         InlinePanel("team_members", label="Багийн гишүүн"),
