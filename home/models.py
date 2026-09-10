@@ -30,7 +30,13 @@ class HomePage(Page):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="+",
-        help_text="Hero хэсэгт харагдах том зураг"
+        help_text="Hero хэсэгт харагдах том зураг (hero_video байхгүй үед ашиглагдана)"
+    )
+    hero_video = models.FileField(
+        upload_to="videos/",
+        null=True,
+        blank=True,
+        help_text="Hero хэсэгт автоматаар тоглох дэвсгэр видео (MP4, дуугүй, давтагдана). Байвал зурган дээр давамгайлна."
     )
     intro_heading = models.CharField(max_length=255, blank=True, default="Бидний тухай")
     intro_text = RichTextField(blank=True)
@@ -56,6 +62,7 @@ class HomePage(Page):
         FieldPanel("hero_title"),
         FieldPanel("hero_subtitle"),
         FieldPanel("hero_image"),
+        FieldPanel("hero_video"),
         FieldPanel("intro_heading"),
         FieldPanel("intro_text"),
         FieldPanel("story_image"),
