@@ -200,25 +200,55 @@
 {% endblock %}
 
 {% block extra_js %}
+{# GSAP Flip plugin: repositions cards smoothly (FLIP technique) when the
+   filter changes, instead of them just snapping to their new spot. #}
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/Flip.min.js"></script>
 <script>
-    document.querySelectorAll('.filter-pill').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            document.querySelectorAll('.filter-pill').forEach(function (b) { b.classList.remove('active'); });
-            btn.classList.add('active');
-            var filter = btn.dataset.filter;
-            document.querySelectorAll('.project-card-col').forEach(function (col) {
-                col.style.display = (filter === 'all' || col.dataset.category === filter) ? '' : 'none';
+    (function () {
+        var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var hasFlip = typeof gsap !== 'undefined' && typeof Flip !== 'undefined';
+        if (hasFlip) gsap.registerPlugin(Flip);
+
+        document.querySelectorAll('.filter-pill').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.filter-pill').forEach(function (b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                var filter = btn.dataset.filter;
+                var cards = document.querySelectorAll('.project-card-col');
+
+                // FLIP: capture the "First" state (current positions) before
+                // the DOM changes, apply the filter, then let Flip animate
+                // from that captured state to the new ("Last") layout.
+                var state = (hasFlip && !reduceMotion) ? Flip.getState(cards) : null;
+
+                cards.forEach(function (col) {
+                    col.style.display = (filter === 'all' || col.dataset.category === filter) ? '' : 'none';
+                });
+
+                if (state) {
+                    Flip.from(state, {
+                        duration: 0.4,
+                        ease: "expo.out",
+                        absolute: true,
+                        onEnter: function (els) {
+                            return gsap.fromTo(els, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.4, ease: "expo.out" });
+                        },
+                        onLeave: function (els) {
+                            return gsap.to(els, { opacity: 0, scale: 0.9, duration: 0.25 });
+                        },
+                    });
+                }
             });
         });
-    });
 
-    var carouselEl = document.getElementById('projectsCarousel');
-    var counter = document.getElementById('carouselCounter');
-    if (carouselEl && counter) {
-        var total = carouselEl.querySelectorAll('.carousel-item').length;
-        carouselEl.addEventListener('slide.bs.carousel', function (e) {
-            counter.textContent = (e.to + 1) + '—' + total;
-        });
-    }
+        var carouselEl = document.getElementById('projectsCarousel');
+        var counter = document.getElementById('carouselCounter');
+        if (carouselEl && counter) {
+            var total = carouselEl.querySelectorAll('.carousel-item').length;
+            carouselEl.addEventListener('slide.bs.carousel', function (e) {
+                counter.textContent = (e.to + 1) + '—' + total;
+            });
+        }
+    })();
 </script>
 {% endblock %}
