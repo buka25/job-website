@@ -140,6 +140,11 @@
             {% endfor %}
         </div>
     </div>
+    <div class="container">
+        <div class="swiper-progress-track">
+            <div class="swiper-progress-bar" id="newsProgressBar"></div>
+        </div>
+    </div>
 </section>
 {% else %}
 <section class="container pb-5">
@@ -159,10 +164,20 @@
             slidesPerView: 'auto',
             spaceBetween: 24,
             speed: 600,
-            cssMode: false,
+            freeMode: {
+                enabled: true,
+                momentum: true,
+                momentumRatio: 1,
+            },
             navigation: {
                 nextEl: '#newsNext',
                 prevEl: '#newsPrev',
+            },
+            on: {
+                progress: function (sw, progress) {
+                    var bar = document.getElementById('newsProgressBar');
+                    if (bar) bar.style.width = (progress * 100) + '%';
+                },
             },
         });
         var counter = document.getElementById('newsCounterCurrent');

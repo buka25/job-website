@@ -23,18 +23,38 @@
         <base target="_blank">
         {% endif %}
 
-        {# Page-load overlay: must be inline so it paints before anything else #}
+        {# Page-load overlay: must be inline so it paints before anything else.
+           Sequence: logo fades in/out (0-0.6s), then the overlay itself lifts
+           away curtain-style via clip-path (0.6-1.0s). #}
         <style>
             .page-load-overlay {
                 position: fixed;
                 inset: 0;
                 z-index: 99999;
                 background: #0c0c0c;
-                transition: opacity 0.6s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                clip-path: inset(0 0 0 0);
+                transition: clip-path 0.4s cubic-bezier(0.65, 0, 0.35, 1);
             }
-            .page-load-overlay.is-loaded {
+            .page-load-overlay .overlay-logo {
+                font-family: 'Inter', -apple-system, sans-serif;
+                font-weight: 700;
+                font-size: 20px;
+                letter-spacing: 0.02em;
+                color: #f5f5f3;
                 opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .page-load-overlay.is-logo-visible .overlay-logo { opacity: 1; }
+            .page-load-overlay.is-curtain-up {
+                clip-path: inset(0 0 100% 0);
                 pointer-events: none;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .page-load-overlay { transition: opacity 0.3s ease; clip-path: none !important; }
+                .page-load-overlay.is-curtain-up { opacity: 0; }
             }
         </style>
 
@@ -48,6 +68,10 @@
         {# Swiper (carousels) #}
         <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet">
 
+        {# GSAP + ScrollTrigger (cinematic scroll animation) #}
+        <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
         {# Global stylesheets #}
         <link rel="stylesheet" type="text/css" href="{% static 'css/jobsite.css' %}">
 
@@ -56,7 +80,9 @@
     </head>
 
     <body class="{% block body_class %}{% endblock %}">
-        <div class="page-load-overlay" id="pageLoadOverlay"></div>
+        <div class="page-load-overlay" id="pageLoadOverlay">
+            <span class="overlay-logo"><span style="color:#f5f5f3;">МАНАЙ</span><span style="color:#c8102e;">КОМПАНИ</span></span>
+        </div>
 
         {% get_current_language as CURRENT_LANGUAGE %}
 
@@ -170,45 +196,129 @@
         <script type="text/javascript" src="{% static 'js/jobsite.js' %}"></script>
 
         <script>
-            // 8. Page-load transition: hold a dark overlay, fade it out once the
-            // page has painted so first content appears as a soft cross-fade
-            // rather than a hard flash. A single-page fade is used (not a
-            // cross-page SPA transition) since this is a server-rendered
-            // multi-page Django site -- intercepting every internal link to
-            // fake a crossfade would add real fragility for little payoff.
+        (function () {
+            "use strict";
+
+            // ---- Guardrails (10): shared feature flags every module below checks ----
+            var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var isMobile = window.matchMedia('(max-width: 768px)').matches;
+            var hasGSAP = typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined';
+            if (hasGSAP) gsap.registerPlugin(ScrollTrigger);
+            var EASE_EXPO = "expo.out"; // cubic-bezier(0.16,1,0.3,1)
+
+            // ---- 9. Page-load sequence: logo fade in/out, then curtain lift ----
             (function () {
                 var overlay = document.getElementById('pageLoadOverlay');
                 if (!overlay) return;
+                if (reduceMotion) {
+                    overlay.remove();
+                    runHeroSequence();
+                    return;
+                }
+                requestAnimationFrame(function () { overlay.classList.add('is-logo-visible'); });
                 window.addEventListener('load', function () {
-                    setTimeout(function () { overlay.classList.add('is-loaded'); }, 150);
+                    setTimeout(function () { overlay.classList.remove('is-logo-visible'); }, 600);
+                    setTimeout(function () { overlay.classList.add('is-curtain-up'); }, 600);
+                    setTimeout(function () {
+                        overlay.remove();
+                        runHeroSequence();
+                    }, 1000);
                 });
             })();
 
-            // 2. Navbar: transparent over hero, solid + blurred once scrolled
+            // ---- 3. Navbar: dynamic state + hide-on-scroll-down, show-on-scroll-up ----
+            // Direction is only trusted once it has held for ~150ms (debounced),
+            // so a single jittery wheel tick can't flicker the bar; the scroll
+            // handler itself is rAF-throttled for performance.
             (function () {
                 var nav = document.getElementById('siteNavbar');
                 if (!nav) return;
-                function onScroll() {
-                    if (window.scrollY > 60) {
-                        nav.classList.add('is-scrolled');
-                    } else {
-                        nav.classList.remove('is-scrolled');
-                    }
+                var lastY = window.scrollY;
+                var pendingDirection = null;
+                var directionTimer = null;
+                var ticking = false;
+
+                function apply() {
+                    var y = window.scrollY;
+                    nav.classList.toggle('is-scrolled', y > 80);
+
+                    var direction = y > lastY ? 'down' : (y < lastY ? 'up' : null);
+                    lastY = y;
+                    ticking = false;
+                    if (!direction || direction === pendingDirection) return;
+                    pendingDirection = direction;
+
+                    clearTimeout(directionTimer);
+                    directionTimer = setTimeout(function () {
+                        if (direction === 'down' && window.scrollY > 160) {
+                            nav.classList.add('is-hidden');
+                        } else if (direction === 'up') {
+                            nav.classList.remove('is-hidden');
+                        }
+                    }, 150);
                 }
-                window.addEventListener('scroll', onScroll, { passive: true });
-                onScroll();
+
+                window.addEventListener('scroll', function () {
+                    if (!ticking) {
+                        requestAnimationFrame(apply);
+                        ticking = true;
+                    }
+                }, { passive: true });
+                apply();
             })();
 
-            // 1. Scroll-triggered fade-in (+ staggered children inside
-            // .reveal-stagger containers, 120ms apart) via Intersection Observer
+            // ---- 1. Scroll-triggered reveal (once, with optional 120ms stagger) ----
             (function () {
                 document.querySelectorAll('.reveal-stagger').forEach(function (group) {
-                    Array.prototype.forEach.call(group.children, function (child, i) {
+                    Array.prototype.forEach.call(group.children, function (child) {
                         child.classList.add('reveal-on-scroll');
-                        child.style.transitionDelay = (i * 0.12) + 's';
                     });
                 });
 
+                if (reduceMotion) {
+                    document.querySelectorAll('.reveal-on-scroll').forEach(function (el) {
+                        el.classList.add('is-visible');
+                    });
+                    return;
+                }
+
+                if (hasGSAP) {
+                    document.querySelectorAll('.reveal-stagger').forEach(function (group) {
+                        ScrollTrigger.batch(group.children, {
+                            start: "top 80%",
+                            once: true,
+                            onEnter: function (batch) {
+                                gsap.to(batch, {
+                                    opacity: 1, y: 0, filter: "blur(0px)",
+                                    duration: 1.1, ease: EASE_EXPO, stagger: 0.12,
+                                    onStart: function () { batch.forEach(function (el) { el.style.willChange = 'transform, opacity, filter'; }); },
+                                    onComplete: function () { batch.forEach(function (el) { el.style.willChange = 'auto'; }); },
+                                });
+                            },
+                        });
+                    });
+                    document.querySelectorAll('.reveal-on-scroll').forEach(function (el) {
+                        if (el.closest('.reveal-stagger')) return;
+                        ScrollTrigger.create({
+                            trigger: el, start: "top 80%", once: true,
+                            onEnter: function () {
+                                gsap.to(el, {
+                                    opacity: 1, y: 0, filter: "blur(0px)", duration: 1.1, ease: EASE_EXPO,
+                                    onStart: function () { el.style.willChange = 'transform, opacity, filter'; },
+                                    onComplete: function () { el.style.willChange = 'auto'; },
+                                });
+                            },
+                        });
+                    });
+                    return;
+                }
+
+                // Fallback: no GSAP -- plain Intersection Observer, CSS drives the transition
+                document.querySelectorAll('.reveal-stagger').forEach(function (group) {
+                    Array.prototype.forEach.call(group.children, function (child, i) {
+                        child.style.transitionDelay = (i * 0.12) + 's';
+                    });
+                });
                 var targets = document.querySelectorAll('.reveal-on-scroll');
                 if (!targets.length) return;
                 if (!('IntersectionObserver' in window)) {
@@ -222,12 +332,11 @@
                             observer.unobserve(entry.target);
                         }
                     });
-                }, { threshold: 0.15 });
+                }, { rootMargin: "-20% 0px", threshold: 0 });
                 targets.forEach(function (el) { observer.observe(el); });
             })();
 
-            // 6. Text reveal: split .text-reveal elements into per-word masked
-            // spans, then slide each word up into place with a short stagger.
+            // ---- 7. Text reveal: clip-path line-mask, word-by-word (80ms) stagger ----
             (function () {
                 var els = document.querySelectorAll('.text-reveal');
                 if (!els.length) return;
@@ -239,12 +348,12 @@
                         line.className = 'text-reveal-line';
                         var inner = document.createElement('span');
                         inner.textContent = word + ' ';
-                        inner.style.transitionDelay = (i * 0.04) + 's';
+                        inner.style.transitionDelay = (i * 0.08) + 's';
                         line.appendChild(inner);
                         el.appendChild(line);
                     });
                 });
-                if (!('IntersectionObserver' in window)) {
+                if (reduceMotion || !('IntersectionObserver' in window)) {
                     els.forEach(function (el) { el.classList.add('is-visible'); });
                     return;
                 }
@@ -259,30 +368,63 @@
                 els.forEach(function (el) { observer.observe(el); });
             })();
 
-            // 7. Custom cursor (optional per spec) -- only on devices with a
-            // real mouse, so touch/tablet users keep the native cursor.
+            // ---- 5. Hero orchestration: reveal the tagline + scroll cue once the
+            // page-load curtain has fully lifted (or immediately under reduced motion) ----
+            function runHeroSequence() {
+                if (window.__heroSequenceRan) return;
+                window.__heroSequenceRan = true;
+                var content = document.querySelector('.hero-content');
+                if (content) content.classList.add('hero-content-ready');
+            }
+            if (reduceMotion) runHeroSequence();
+
+            // ---- 8. Cursor follower: desktop only (>=1024px, real mouse), GSAP
+            // quickTo for a lerp'd (lagged) follow instead of a 1:1 snap ----
             (function () {
-                if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+                if (isMobile) return;
+                if (!window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1024px)').matches) return;
                 var cursor = document.createElement('div');
                 cursor.className = 'custom-cursor';
                 cursor.innerHTML = '<span class="cursor-label"></span>';
                 document.body.appendChild(cursor);
                 document.body.classList.add('has-custom-cursor');
 
+                var mouseX = 0, mouseY = 0;
+                var isHovering = false;
                 window.addEventListener('mousemove', function (e) {
-                    cursor.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                    if (!hasGSAP) {
+                        // combine translate+scale in one inline transform so
+                        // neither piece clobbers the other
+                        var scale = isHovering ? 3 : 1;
+                        cursor.style.transform = 'translate(' + mouseX + 'px,' + mouseY + 'px) scale(' + scale + ')';
+                    }
                 });
+                if (hasGSAP) {
+                    var quickX = gsap.quickTo(cursor, "x", { duration: 0.35, ease: "power3" });
+                    var quickY = gsap.quickTo(cursor, "y", { duration: 0.35, ease: "power3" });
+                    gsap.ticker.add(function () { quickX(mouseX); quickY(mouseY); });
+                }
 
                 document.querySelectorAll('[data-cursor]').forEach(function (el) {
                     el.addEventListener('mouseenter', function () {
+                        isHovering = true;
                         cursor.classList.add('is-hovering');
                         cursor.querySelector('.cursor-label').textContent = el.dataset.cursor || 'View';
+                        // GSAP's quickTo already owns this element's transform (x/y);
+                        // scaling via the same engine keeps translate+scale composed
+                        // into one matrix instead of a CSS class fighting inline styles.
+                        if (hasGSAP) gsap.to(cursor, { scale: 3, duration: 0.3, ease: EASE_EXPO });
                     });
                     el.addEventListener('mouseleave', function () {
+                        isHovering = false;
                         cursor.classList.remove('is-hovering');
+                        if (hasGSAP) gsap.to(cursor, { scale: 1, duration: 0.3, ease: EASE_EXPO });
                     });
                 });
             })();
+        })();
         </script>
 
         {% block extra_js %}
