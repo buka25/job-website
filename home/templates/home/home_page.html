@@ -197,7 +197,7 @@
     {% endif %}
     <div class="hero-overlay"></div>
     <div class="hero-content">
-        <h1>{{ page.hero_title }}</h1>
+        <h1 class="text-reveal">{{ page.hero_title }}</h1>
         <a href="#story" class="hero-scroll-cta">
             <span>Scroll</span>
             <i class="bi bi-arrow-down"></i>
@@ -235,10 +235,10 @@
                 <h2 class="text-white mb-2">{{ page.years_heading }}</h2>
             </div>
         </div>
-        <div class="row g-4">
+        <div class="row g-4 reveal-stagger">
             {% for card in page.idea_cards.all %}
             <div class="col-md-6 col-lg-4">
-                <a href="{{ card.link }}" class="text-decoration-none">
+                <a href="{{ card.link }}" class="text-decoration-none" data-cursor="View">
                     <div class="issue-card tone-{% cycle '1' '2' '3' %}">
                         {% if card.tag %}<span class="issue-tag">{{ card.tag }}</span>{% endif %}
                         <h3>{{ card.title }}</h3>
@@ -293,7 +293,7 @@
             </div>
             <a href="/jobs/" class="pill-btn">Ажлын байр үзэх <i class="bi bi-arrow-right"></i></a>
         </div>
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4 reveal-stagger">
             {% for person in page.people_cards.all %}
             <div class="col">
                 <div class="people-card">

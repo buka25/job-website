@@ -167,7 +167,7 @@
 
 <!-- PROJECTS GRID -->
 <section class="container pb-5">
-    <div class="row g-4" id="projectsGrid">
+    <div class="row g-4 reveal-stagger" id="projectsGrid">
         {% for item in page.project_items.all %}
         <div class="col-md-6 col-lg-4 project-card-col" data-category="{{ item.category }}">
             <div class="project-card h-100">

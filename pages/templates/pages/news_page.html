@@ -69,6 +69,10 @@
         color: #a8a8a3;
         letter-spacing: 0.04em;
     }
+    #newsCounterCurrent {
+        display: inline-block;
+        transition: opacity 0.25s ease;
+    }
     .news-swiper-btn {
         width: 42px;
         height: 42px;
@@ -114,7 +118,7 @@
         <div class="swiper-wrapper">
             {% for article in articles %}
             <div class="swiper-slide" style="width: 340px;">
-                <a href="{% pageurl article %}" class="news-card">
+                <a href="{% pageurl article %}" class="news-card" data-cursor="Read">
                     <div class="news-card-img">
                         {% if article.image %}
                             {% image article.image width-800 format-webp as article_img %}
@@ -154,6 +158,8 @@
         var swiper = new Swiper(el, {
             slidesPerView: 'auto',
             spaceBetween: 24,
+            speed: 600,
+            cssMode: false,
             navigation: {
                 nextEl: '#newsNext',
                 prevEl: '#newsPrev',
@@ -162,7 +168,11 @@
         var counter = document.getElementById('newsCounterCurrent');
         if (counter) {
             swiper.on('slideChange', function () {
-                counter.textContent = String(swiper.activeIndex + 1).padStart(2, '0');
+                counter.style.opacity = '0';
+                setTimeout(function () {
+                    counter.textContent = String(swiper.activeIndex + 1).padStart(2, '0');
+                    counter.style.opacity = '1';
+                }, 150);
             });
         }
     })();

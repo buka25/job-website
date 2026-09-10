@@ -82,9 +82,9 @@
 </section>
 
 <!-- EXPERTISE GRID -->
-<div class="expertise-grid">
+<div class="expertise-grid reveal-stagger">
     {% for item in page.service_items.all %}
-    <a href="#" class="expertise-card reveal-on-scroll">
+    <a href="#" class="expertise-card" data-cursor="View More">
         {% if item.image %}
             {% image item.image width-900 as item_img %}
             <img src="{{ item_img.url }}" alt="{{ item.title }}" loading="lazy">
