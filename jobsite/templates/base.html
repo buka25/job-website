@@ -86,12 +86,6 @@
             <span class="overlay-logo"><span style="color:#f5f5f3;">МАНАЙ</span><span style="color:#c8102e;">КОМПАНИ</span></span>
         </div>
 
-        {% comment %}
-        8. Film-grain overlay: static (no JS/animation), a thin SVG noise
-        texture over the whole site for a premium/analog feel.
-        {% endcomment %}
-        <div class="grain-overlay" aria-hidden="true"></div>
-
         {% get_current_language as CURRENT_LANGUAGE %}
 
         <nav class="navbar navbar-expand-lg site-navbar py-3" id="siteNavbar">
@@ -440,111 +434,6 @@
                 }
             }
             if (reduceMotion) runHeroSequence();
-
-            // ---- 8. Cursor follower: desktop only (>=1024px, real mouse), GSAP
-            // quickTo for a lerp'd (lagged) follow instead of a 1:1 snap ----
-            (function () {
-                if (isMobile) return;
-                if (!window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1024px)').matches) return;
-                var cursor = document.createElement('div');
-                cursor.className = 'custom-cursor';
-                cursor.innerHTML = '<span class="cursor-label"></span>';
-                document.body.appendChild(cursor);
-                document.body.classList.add('has-custom-cursor');
-
-                var mouseX = 0, mouseY = 0;
-                var isHovering = false;
-                window.addEventListener('mousemove', function (e) {
-                    mouseX = e.clientX;
-                    mouseY = e.clientY;
-                    if (!hasGSAP) {
-                        // combine translate+scale in one inline transform so
-                        // neither piece clobbers the other
-                        var scale = isHovering ? 3 : 1;
-                        cursor.style.transform = 'translate(' + mouseX + 'px,' + mouseY + 'px) scale(' + scale + ')';
-                    }
-                });
-                if (hasGSAP) {
-                    var quickX = gsap.quickTo(cursor, "x", { duration: 0.35, ease: "power3" });
-                    var quickY = gsap.quickTo(cursor, "y", { duration: 0.35, ease: "power3" });
-                    gsap.ticker.add(function () { quickX(mouseX); quickY(mouseY); });
-                }
-
-                document.querySelectorAll('[data-cursor]').forEach(function (el) {
-                    el.addEventListener('mouseenter', function () {
-                        isHovering = true;
-                        cursor.classList.add('is-hovering');
-                        cursor.querySelector('.cursor-label').textContent = el.dataset.cursor || 'View';
-                        // GSAP's quickTo already owns this element's transform (x/y);
-                        // scaling via the same engine keeps translate+scale composed
-                        // into one matrix instead of a CSS class fighting inline styles.
-                        if (hasGSAP) gsap.to(cursor, { scale: 3, duration: 0.3, ease: EASE_EXPO });
-                    });
-                    el.addEventListener('mouseleave', function () {
-                        isHovering = false;
-                        cursor.classList.remove('is-hovering');
-                        if (hasGSAP) gsap.to(cursor, { scale: 1, duration: 0.3, ease: EASE_EXPO });
-                    });
-                });
-            })();
-
-            // ---- Signature 1: Magnetic CTA -- [data-magnetic] buttons pull
-            // ~30% toward the cursor within their own box, then spring back
-            // with a slight overshoot on mouseleave. Desktop-only (a magnetic
-            // pull means nothing under a finger on a touch screen). ----
-            (function () {
-                if (isMobile || !hasGSAP) return;
-                if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-
-                document.querySelectorAll('[data-magnetic]').forEach(function (el) {
-                    var quickX = gsap.quickTo(el, "x", { duration: 0.35, ease: EASE_EXPO });
-                    var quickY = gsap.quickTo(el, "y", { duration: 0.35, ease: EASE_EXPO });
-
-                    el.addEventListener('mousemove', function (e) {
-                        var rect = el.getBoundingClientRect();
-                        var offsetX = e.clientX - (rect.left + rect.width / 2);
-                        var offsetY = e.clientY - (rect.top + rect.height / 2);
-                        quickX(offsetX * 0.3);
-                        quickY(offsetY * 0.3);
-                    });
-                    el.addEventListener('mouseleave', function () {
-                        // elastic-ish overshoot on release: cubic-bezier(0.34,1.56,0.64,1)
-                        gsap.to(el, { x: 0, y: 0, duration: 0.6, ease: "back.out(1.7)" });
-                    });
-                });
-            })();
-
-            // ---- Signature 2: SVG line-draw -- .line-draw dividers "draw"
-            // themselves in via stroke-dashoffset once scrolled into view.
-            // Reads each path's real length so the dash trick lines up exactly
-            // (a hardcoded dasharray would clip long/short paths wrong). ----
-            (function () {
-                var lines = document.querySelectorAll('.line-draw path');
-                if (!lines.length) return;
-                lines.forEach(function (path) {
-                    var length = path.getTotalLength();
-                    path.closest('.line-draw').style.setProperty('--line-length', length);
-                });
-                if (reduceMotion) {
-                    document.querySelectorAll('.line-draw').forEach(function (el) { el.classList.add('is-visible'); });
-                    return;
-                }
-                var reveal = function (el) { el.classList.add('is-visible'); };
-                if (hasGSAP) {
-                    document.querySelectorAll('.line-draw').forEach(function (el) {
-                        ScrollTrigger.create({ trigger: el, start: "top 85%", once: true, onEnter: function () { reveal(el); } });
-                    });
-                } else if ('IntersectionObserver' in window) {
-                    var observer = new IntersectionObserver(function (entries) {
-                        entries.forEach(function (entry) {
-                            if (entry.isIntersecting) { reveal(entry.target); observer.unobserve(entry.target); }
-                        });
-                    }, { threshold: 0.3 });
-                    document.querySelectorAll('.line-draw').forEach(function (el) { observer.observe(el); });
-                } else {
-                    document.querySelectorAll('.line-draw').forEach(reveal);
-                }
-            })();
         })();
         </script>
 

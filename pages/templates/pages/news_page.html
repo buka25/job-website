@@ -118,7 +118,7 @@
         <div class="swiper-wrapper">
             {% for article in articles %}
             <div class="swiper-slide" style="width: 340px;">
-                <a href="{% pageurl article %}" class="news-card" data-cursor="Read">
+                <a href="{% pageurl article %}" class="news-card">
                     <div class="news-card-img">
                         {% if article.image %}
                             {% image article.image width-800 format-webp as article_img %}
