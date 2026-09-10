@@ -302,6 +302,54 @@ body { padding-top: 76px; }
     opacity: 1;
 }
 
+/* ---------- Signature effects (v3): magnetic CTA, SVG line-draw, grain ---------- */
+
+/* Magnetic CTA: JS (base.html) drives the actual x/y pull via GSAP quickTo;
+   this just declares the element as GPU-composited while it's being nudged. */
+[data-magnetic] {
+    display: inline-flex;
+    will-change: transform;
+}
+
+/* SVG line-draw divider: a thin decorative rule that "draws" itself under a
+   heading once scrolled into view. The stroke-dasharray/offset trick needs
+   the path's own length, which base.html's JS reads at runtime and writes
+   into --line-length (falls back to 200 if JS hasn't run yet, e.g. no-JS). */
+.line-draw {
+    display: block;
+    width: 100%;
+    max-width: 220px;
+    height: 2px;
+    margin-top: 0.75rem;
+    overflow: visible;
+}
+.line-draw path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: var(--line-length, 200);
+    stroke-dashoffset: var(--line-length, 200);
+    transition: stroke-dashoffset 1.5s ease-in-out;
+}
+.line-draw.is-visible path {
+    stroke-dashoffset: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+    .line-draw path { transition: none; stroke-dashoffset: 0; }
+}
+
+/* Film-grain overlay: static SVG feTurbulence noise, ~4% opacity, fixed over
+   everything. No JS, no animation -- cheap enough to leave on permanently. */
+.grain-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9997;
+    pointer-events: none;
+    opacity: 0.045;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 /* ---------- 6. Carousel refinements (Swiper) ---------- */
 .swiper-wrapper {
     transition-timing-function: var(--ease-expo) !important;

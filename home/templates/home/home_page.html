@@ -285,6 +285,7 @@
 <section class="py-5 py-lg-6 bg-light">
     <div class="container mb-4">
         <h2 class="mb-0">Манай ажлууд</h2>
+        <svg class="line-draw" viewBox="0 0 220 2"><path d="M0 1 H220" /></svg>
         <p class="text-muted fs-5 mt-2">Бид хийсэн бодит төслүүдээрээ юу өөрчилж чадсаныг харуулна.</p>
     </div>
     <div class="scroll-gallery" id="scrollGallery">
@@ -310,7 +311,7 @@
                 <h2 class="mb-2">{{ page.people_heading }}</h2>
                 <div class="text-muted fs-5" style="max-width: 640px;">{{ page.people_subheading|richtext }}</div>
             </div>
-            <a href="/jobs/" class="pill-btn">Ажлын байр үзэх <i class="bi bi-arrow-right"></i></a>
+            <a href="/jobs/" class="pill-btn" data-magnetic>Ажлын байр үзэх <i class="bi bi-arrow-right"></i></a>
         </div>
         <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4 reveal-stagger">
             {% for person in page.people_cards.all %}
@@ -344,7 +345,7 @@
 <section class="py-5 text-white text-center" style="background: #1a1a1a;">
     <div class="container">
         <h2 class="mb-3 text-white">Манай багт нэгдээрэй</h2>
-        <a href="/jobs/" class="btn btn-light btn-lg px-5">Ажлын байр үзэх</a>
+        <a href="/jobs/" class="btn btn-light btn-lg px-5" data-magnetic>Ажлын байр үзэх</a>
     </div>
 </section>
 

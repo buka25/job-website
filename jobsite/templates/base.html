@@ -23,9 +23,11 @@
         <base target="_blank">
         {% endif %}
 
-        {# Page-load overlay: must be inline so it paints before anything else.
-           Sequence: logo fades in/out (0-0.6s), then the overlay itself lifts
-           away curtain-style via clip-path (0.6-1.0s). #}
+        {% comment %}
+        Page-load overlay: must be inline so it paints before anything else.
+        Sequence: logo fades in/out (0-0.6s), then the overlay itself lifts
+        away curtain-style via clip-path (0.6-1.0s).
+        {% endcomment %}
         <style>
             .page-load-overlay {
                 position: fixed;
@@ -83,6 +85,12 @@
         <div class="page-load-overlay" id="pageLoadOverlay">
             <span class="overlay-logo"><span style="color:#f5f5f3;">МАНАЙ</span><span style="color:#c8102e;">КОМПАНИ</span></span>
         </div>
+
+        {% comment %}
+        8. Film-grain overlay: static (no JS/animation), a thin SVG noise
+        texture over the whole site for a premium/analog feel.
+        {% endcomment %}
+        <div class="grain-overlay" aria-hidden="true"></div>
 
         {% get_current_language as CURRENT_LANGUAGE %}
 
@@ -206,7 +214,20 @@
             if (hasGSAP) gsap.registerPlugin(ScrollTrigger);
             var EASE_EXPO = "expo.out"; // cubic-bezier(0.16,1,0.3,1)
 
-            // ---- 9. Page-load sequence: logo fade in/out, then curtain lift ----
+            // ---- 9 + 10 (choreography): page-load sequence as one GSAP master
+            // timeline -- logo fade, curtain lift, and the hero's own entrance
+            // are scheduled with overlap ("-=" position params) instead of a
+            // chain of independent setTimeouts, so the handoff between them
+            // reads as one directed sequence rather than three separate cuts.
+            //
+            // Deliberately NOT gated on 'load' or 'DOMContentLoaded': this is
+            // a purely cosmetic intro over an overlay that's already visible
+            // from first paint, so it doesn't need to wait for images/fonts/
+            // third-party scripts to finish -- and gating it on those events
+            // means one slow or CDP-navigated subresource can leave the
+            // curtain stuck forever (confirmed happening in this exact
+            // environment during testing). The timeline's own internal
+            // position offsets (0.6, "-=0.2", ...) provide the pacing instead. ----
             (function () {
                 var overlay = document.getElementById('pageLoadOverlay');
                 if (!overlay) return;
@@ -215,15 +236,51 @@
                     runHeroSequence();
                     return;
                 }
+
                 requestAnimationFrame(function () { overlay.classList.add('is-logo-visible'); });
-                window.addEventListener('load', function () {
+
+                if (!hasGSAP) {
+                    // Fallback: the original plain setTimeout chain
                     setTimeout(function () { overlay.classList.remove('is-logo-visible'); }, 600);
                     setTimeout(function () { overlay.classList.add('is-curtain-up'); }, 600);
-                    setTimeout(function () {
-                        overlay.remove();
-                        runHeroSequence();
-                    }, 1000);
-                });
+                    setTimeout(function () { overlay.remove(); runHeroSequence(); }, 1000);
+                    return;
+                }
+
+                var logo = overlay.querySelector('.overlay-logo');
+                var hero = document.querySelector('.hero-content');
+                var tl = gsap.timeline();
+
+                tl.to(logo, { opacity: 0, duration: 0.3, ease: "power1.in" }, 0.6)
+                  .to(overlay, {
+                      clipPath: "inset(0 0 100% 0)",
+                      duration: 0.4,
+                      ease: "cubic-bezier(0.65, 0, 0.35, 1)",
+                      onComplete: function () { overlay.remove(); },
+                  }, 0.6);
+
+                if (hero) {
+                    tl.fromTo(hero,
+                        { opacity: 0, y: 30 },
+                        { opacity: 1, y: 0, duration: 1.4, ease: "expo.out", onStart: runHeroSequence },
+                        "-=0.2" // hero begins rising in while the curtain is still finishing
+                    );
+                } else {
+                    tl.call(runHeroSequence, null, "-=0.2");
+                }
+
+                // Failsafe: a stalled tween (throttled tab, low-power device,
+                // reduced frame rate) must never leave the curtain covering
+                // the site indefinitely -- kill the timeline (so it can't keep
+                // fighting our manual override) and force the end-state if it
+                // hasn't finished on its own by 2.5s.
+                setTimeout(function () {
+                    if (tl.progress() >= 1) return; // already finished normally
+                    tl.kill();
+                    if (overlay.isConnected) overlay.remove();
+                    runHeroSequence();
+                    if (hero) { hero.style.opacity = '1'; hero.style.transform = 'none'; }
+                }, 2500);
             })();
 
             // ---- 3. Navbar: dynamic state + hide-on-scroll-down, show-on-scroll-up ----
@@ -373,8 +430,14 @@
             function runHeroSequence() {
                 if (window.__heroSequenceRan) return;
                 window.__heroSequenceRan = true;
-                var content = document.querySelector('.hero-content');
-                if (content) content.classList.add('hero-content-ready');
+                // Only add the CSS-transition class on paths where GSAP isn't
+                // already driving the same opacity/transform directly (reduced
+                // motion, or the no-GSAP fallback) -- otherwise the CSS
+                // transition and the GSAP tween would fight over one element.
+                if (reduceMotion || !hasGSAP) {
+                    var content = document.querySelector('.hero-content');
+                    if (content) content.classList.add('hero-content-ready');
+                }
             }
             if (reduceMotion) runHeroSequence();
 
@@ -423,6 +486,64 @@
                         if (hasGSAP) gsap.to(cursor, { scale: 1, duration: 0.3, ease: EASE_EXPO });
                     });
                 });
+            })();
+
+            // ---- Signature 1: Magnetic CTA -- [data-magnetic] buttons pull
+            // ~30% toward the cursor within their own box, then spring back
+            // with a slight overshoot on mouseleave. Desktop-only (a magnetic
+            // pull means nothing under a finger on a touch screen). ----
+            (function () {
+                if (isMobile || !hasGSAP) return;
+                if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+                document.querySelectorAll('[data-magnetic]').forEach(function (el) {
+                    var quickX = gsap.quickTo(el, "x", { duration: 0.35, ease: EASE_EXPO });
+                    var quickY = gsap.quickTo(el, "y", { duration: 0.35, ease: EASE_EXPO });
+
+                    el.addEventListener('mousemove', function (e) {
+                        var rect = el.getBoundingClientRect();
+                        var offsetX = e.clientX - (rect.left + rect.width / 2);
+                        var offsetY = e.clientY - (rect.top + rect.height / 2);
+                        quickX(offsetX * 0.3);
+                        quickY(offsetY * 0.3);
+                    });
+                    el.addEventListener('mouseleave', function () {
+                        // elastic-ish overshoot on release: cubic-bezier(0.34,1.56,0.64,1)
+                        gsap.to(el, { x: 0, y: 0, duration: 0.6, ease: "back.out(1.7)" });
+                    });
+                });
+            })();
+
+            // ---- Signature 2: SVG line-draw -- .line-draw dividers "draw"
+            // themselves in via stroke-dashoffset once scrolled into view.
+            // Reads each path's real length so the dash trick lines up exactly
+            // (a hardcoded dasharray would clip long/short paths wrong). ----
+            (function () {
+                var lines = document.querySelectorAll('.line-draw path');
+                if (!lines.length) return;
+                lines.forEach(function (path) {
+                    var length = path.getTotalLength();
+                    path.closest('.line-draw').style.setProperty('--line-length', length);
+                });
+                if (reduceMotion) {
+                    document.querySelectorAll('.line-draw').forEach(function (el) { el.classList.add('is-visible'); });
+                    return;
+                }
+                var reveal = function (el) { el.classList.add('is-visible'); };
+                if (hasGSAP) {
+                    document.querySelectorAll('.line-draw').forEach(function (el) {
+                        ScrollTrigger.create({ trigger: el, start: "top 85%", once: true, onEnter: function () { reveal(el); } });
+                    });
+                } else if ('IntersectionObserver' in window) {
+                    var observer = new IntersectionObserver(function (entries) {
+                        entries.forEach(function (entry) {
+                            if (entry.isIntersecting) { reveal(entry.target); observer.unobserve(entry.target); }
+                        });
+                    }, { threshold: 0.3 });
+                    document.querySelectorAll('.line-draw').forEach(function (el) { observer.observe(el); });
+                } else {
+                    document.querySelectorAll('.line-draw').forEach(reveal);
+                }
             })();
         })();
         </script>
