@@ -170,6 +170,7 @@
     <div class="row g-4 reveal-stagger" id="projectsGrid">
         {% for item in page.project_items.all %}
         <div class="col-md-6 col-lg-4 project-card-col" data-category="{{ item.category }}">
+            {% if item.detail_page %}<a href="{% pageurl item.detail_page %}" class="text-decoration-none text-dark d-block h-100">{% endif %}
             <div class="project-card h-100">
                 <div class="project-card-img">
                     {% if item.image %}
@@ -188,6 +189,7 @@
                 {% if item.location %}<p class="text-muted small mb-2">{{ item.location }}</p>{% endif %}
                 {% if item.description %}<p class="mb-0 small">{{ item.description }}</p>{% endif %}
             </div>
+            {% if item.detail_page %}</a>{% endif %}
         </div>
         {% empty %}
         <p class="text-muted">Одоогоор төсөл нэмэгдээгүй байна.</p>

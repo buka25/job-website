@@ -118,6 +118,14 @@ class ProjectItem(Orderable):
         on_delete=models.SET_NULL,
         related_name="+"
     )
+    detail_page = models.ForeignKey(
+        "pages.ProjectDetailPage",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Сонголтоор: энэ картыг дэлгэрэнгүй хуудас руу холбоно"
+    )
 
     panels = [
         FieldPanel("title"),
@@ -126,6 +134,81 @@ class ProjectItem(Orderable):
         FieldPanel("category"),
         FieldPanel("featured"),
         FieldPanel("image"),
+        FieldPanel("detail_page"),
+    ]
+
+
+class ProjectDetailPage(Page):
+    """Нэг төслийн дэлгэрэнгүй (case-study) хуудас"""
+    cover_image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Хуудасны эхэн дэх бүтэн өргөн зураг"
+    )
+    location = models.CharField(max_length=255, blank=True)
+    year = models.CharField(max_length=20, blank=True)
+    status = models.CharField(
+        max_length=50, blank=True,
+        choices=[
+            ("concept", "Санаа/Concept"),
+            ("in_progress", "Хийгдэж байгаа"),
+            ("completed", "Дууссан"),
+        ],
+        default="completed",
+    )
+    client = models.CharField(max_length=255, blank=True)
+    intro = RichTextField(blank=True, help_text="Богино танилцуулга")
+    body = RichTextField(blank=True, help_text="Дэлгэрэнгүй агуулга")
+
+    content_panels = Page.content_panels + [
+        FieldPanel("cover_image"),
+        FieldRowPanel([
+            FieldPanel("location"),
+            FieldPanel("year"),
+            FieldPanel("status"),
+            FieldPanel("client"),
+        ]),
+        FieldPanel("intro"),
+        FieldPanel("body"),
+        InlinePanel("gallery_images", label="Галерейн зураг"),
+    ]
+
+    parent_page_types = ["pages.ProjectsPage"]
+
+    def get_status_display_mn(self):
+        return dict(self._meta.get_field("status").choices).get(self.status, self.status)
+
+    def get_context(self, request):
+        context = super().get_context(request)
+        context["next_project"] = (
+            ProjectDetailPage.objects.live()
+            .sibling_of(self)
+            .filter(path__gt=self.path)
+            .order_by("path")
+            .first()
+            or ProjectDetailPage.objects.live().sibling_of(self).order_by("path").first()
+        )
+        return context
+
+
+class ProjectGalleryImage(Orderable):
+    """Төслийн дэлгэрэнгүй хуудасны галерейн нэг зураг"""
+    page = ParentalKey(ProjectDetailPage, on_delete=models.CASCADE, related_name="gallery_images")
+    image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+"
+    )
+    caption = models.CharField(max_length=255, blank=True)
+
+    panels = [
+        FieldPanel("image"),
+        FieldPanel("caption"),
     ]
 
 

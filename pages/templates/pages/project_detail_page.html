@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block extra_css %}
+<style>
+    .pd-hero {
+        position: relative;
+        margin-top: -76px;
+        height: 70vh;
+        min-height: 420px;
+        overflow: hidden;
+    }
+    .pd-hero img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .pd-hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 60%);
+    }
+    .pd-hero-title {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        padding: 0 48px 3rem;
+    }
+    @media (max-width: 600px) { .pd-hero-title { padding: 0 24px 2rem; } }
+    .pd-hero-title h1 { font-size: clamp(2rem, 5vw, 3.5rem); max-width: 900px; }
+
+    .pd-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        padding: 2rem 0;
+    }
+    @media (max-width: 760px) {
+        .pd-meta-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .pd-meta-grid dt {
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
+    }
+    .pd-meta-grid dd { margin: 0; font-size: 1.05rem; }
+
+    .pd-gallery {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2px;
+    }
+    @media (max-width: 600px) { .pd-gallery { grid-template-columns: 1fr; } }
+    .pd-gallery-item {
+        overflow: hidden;
+        cursor: zoom-in;
+        background: #151512;
+    }
+    .pd-gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        aspect-ratio: 4 / 3;
+        transition: transform var(--dur-hover, 0.7s) var(--ease-expo, cubic-bezier(0.16,1,0.3,1));
+    }
+    .pd-gallery-item:hover img { transform: scale(1.08); }
+
+    /* Lightbox */
+    .pd-lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        background: rgba(12, 12, 12, 0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: background 0.35s ease, opacity 0.35s ease;
+    }
+    .pd-lightbox.is-open {
+        background: rgba(12, 12, 12, 0.92);
+        opacity: 1;
+        visibility: visible;
+    }
+    .pd-lightbox img {
+        max-width: 90vw;
+        max-height: 82vh;
+        object-fit: contain;
+        transform: scale(0.92);
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .pd-lightbox.is-open img { transform: scale(1); }
+    .pd-lightbox-caption {
+        position: absolute;
+        left: 0; right: 0; bottom: 2rem;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .pd-lightbox-close {
+        position: absolute;
+        top: 1.5rem; right: 1.5rem;
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        border: 1px solid rgba(245,245,243,0.25);
+        background: transparent;
+        color: var(--text);
+        font-size: 1.25rem;
+        display: flex; align-items: center; justify-content: center;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .pd-lightbox, .pd-lightbox img { transition: none; }
+    }
+
+    /* Next project */
+    .pd-next {
+        position: relative;
+        display: block;
+        height: 320px;
+        overflow: hidden;
+        color: var(--text);
+        text-decoration: none;
+    }
+    .pd-next img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.7s var(--ease-expo, cubic-bezier(0.16,1,0.3,1));
+    }
+    .pd-next:hover img { transform: scale(1.06); }
+    .pd-next-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        transition: transform 0.5s var(--ease-expo, cubic-bezier(0.16,1,0.3,1));
+    }
+    .pd-next:hover .pd-next-overlay { transform: translateY(-6px); }
+    .pd-next-label {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+    .pd-next-title { font-size: clamp(1.5rem, 3vw, 2.25rem); margin: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="pd-hero reveal-on-scroll is-visible">
+    {% if page.cover_image %}
+        {% image page.cover_image width-1920 format-webp as cover_img %}
+        <img src="{{ cover_img.url }}" alt="{{ page.title }}">
+    {% endif %}
+    <div class="pd-hero-overlay"></div>
+    <div class="pd-hero-title">
+        <a href="{% pageurl page.get_parent %}" class="btn btn-outline-secondary btn-sm mb-3">&larr; Бүх төслүүд</a>
+        <h1>{{ page.title }}</h1>
+    </div>
+</section>
+
+<section class="container py-4">
+    <dl class="pd-meta-grid">
+        {% if page.location %}
+        <div><dt>Байршил</dt><dd>{{ page.location }}</dd></div>
+        {% endif %}
+        {% if page.year %}
+        <div><dt>Он</dt><dd>{{ page.year }}</dd></div>
+        {% endif %}
+        {% if page.status %}
+        <div><dt>Төлөв</dt><dd>{{ page.get_status_display }}</dd></div>
+        {% endif %}
+        {% if page.client %}
+        <div><dt>Захиалагч</dt><dd>{{ page.client }}</dd></div>
+        {% endif %}
+    </dl>
+</section>
+
+<section class="container py-4 reveal-on-scroll">
+    {% if page.intro %}
+    <div class="fs-4 mb-4" style="max-width: 760px;">{{ page.intro|richtext }}</div>
+    {% endif %}
+    <div style="max-width: 760px;">{{ page.body|richtext }}</div>
+</section>
+
+{% if page.gallery_images.all %}
+<section class="pd-gallery reveal-stagger my-5">
+    {% for item in page.gallery_images.all %}
+    {% if item.image %}
+        {% image item.image width-1000 format-webp as gallery_img %}
+        <button type="button" class="pd-gallery-item border-0 p-0" data-lightbox-src="{{ gallery_img.url }}" data-lightbox-caption="{{ item.caption }}" aria-label="Зургийг томруулж харах">
+            <img src="{{ gallery_img.url }}" alt="{{ item.caption|default:page.title }}" loading="lazy">
+        </button>
+    {% endif %}
+    {% endfor %}
+</section>
+{% endif %}
+
+<div class="pd-lightbox" id="pdLightbox" role="dialog" aria-modal="true" aria-label="Зургийн харагдац">
+    <button type="button" class="pd-lightbox-close" id="pdLightboxClose" aria-label="Хаах">&times;</button>
+    <img src="" alt="" id="pdLightboxImg">
+    <p class="pd-lightbox-caption" id="pdLightboxCaption"></p>
+</div>
+
+{% if next_project %}
+<a href="{% pageurl next_project %}" class="pd-next">
+    {% if next_project.cover_image %}
+        {% image next_project.cover_image width-1600 format-webp as next_img %}
+        <img src="{{ next_img.url }}" alt="{{ next_project.title }}">
+    {% endif %}
+    <div class="pd-next-overlay">
+        <p class="pd-next-label">Дараагийн төсөл</p>
+        <h3 class="pd-next-title">{{ next_project.title }}</h3>
+    </div>
+</a>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        var lightbox = document.getElementById('pdLightbox');
+        var lbImg = document.getElementById('pdLightboxImg');
+        var lbCaption = document.getElementById('pdLightboxCaption');
+        var closeBtn = document.getElementById('pdLightboxClose');
+        if (!lightbox) return;
+
+        function open(src, caption) {
+            lbImg.src = src;
+            lbCaption.textContent = caption || '';
+            lightbox.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+        }
+        function close() {
+            lightbox.classList.remove('is-open');
+            document.body.style.overflow = '';
+        }
+
+        document.querySelectorAll('[data-lightbox-src]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                open(btn.dataset.lightboxSrc, btn.dataset.lightboxCaption);
+            });
+        });
+        closeBtn.addEventListener('click', close);
+        lightbox.addEventListener('click', function (e) {
+            if (e.target === lightbox) close();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') close();
+        });
+    })();
+</script>
+{% endblock %}
