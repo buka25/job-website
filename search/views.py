@@ -1,7 +1,10 @@
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.http import JsonResponse
 from django.template.response import TemplateResponse
 
 from wagtail.models import Page
+
+POPULAR_SEARCHES = ["Ажлын байр", "Төслүүд", "Бидний тухай", "Холбоо барих"]
 
 # To enable logging of search queries for use with the "Promoted search results" module
 # <https://docs.wagtail.org/en/stable/reference/contrib/searchpromotions.html>
@@ -44,3 +47,25 @@ def search(request):
             "search_results": search_results,
         },
     )
+
+
+def search_suggest(request):
+    """JSON endpoint for the full-screen search overlay's live results."""
+    query = (request.GET.get("query") or "").strip()
+
+    if not query:
+        return JsonResponse({"query": query, "results": [], "popular": POPULAR_SEARCHES})
+
+    pages = Page.objects.live().search(query)[:8]
+    results = [
+        {
+            "title": str(page),
+            "url": page.url or "#",
+            "type": page.content_type.model_class()._meta.verbose_name.title()
+            if page.content_type
+            else "Хуудас",
+        }
+        for page in pages
+        if page.url
+    ]
+    return JsonResponse({"query": query, "results": results, "popular": []})

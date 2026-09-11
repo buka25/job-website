@@ -27,5 +27,6 @@ if settings.DEBUG:
 
 urlpatterns = urlpatterns + i18n_patterns(
     path("search/", search_views.search, name="search"),
+    path("search/suggest/", search_views.search_suggest, name="search_suggest"),
     path("", include(wagtail_urls)),
 )

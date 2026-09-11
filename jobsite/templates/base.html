@@ -108,22 +108,28 @@
                 <li class="nav-item"><a class="nav-link px-2 nav-underline{% if request.path|startswith:'/jobs/' %} active-nav{% endif %}" href="/jobs/">Ажлын байр</a></li>
                 <li class="nav-item"><a class="nav-link px-2 nav-underline{% if request.path|startswith:'/contact/' %} active-nav{% endif %}" href="/contact/">Холбоо барих</a></li>
                 <li class="nav-item px-2">
-                  <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#searchBar">
+                  <button type="button" class="nav-link search-trigger border-0 bg-transparent" id="searchTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="searchOverlay" aria-label="Хайлт нээх">
                     <i class="bi bi-search" style="font-size: 18px;"></i>
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>
           </div>
         </nav>
 
-        <div class="collapse" id="searchBar" style="background: #151512; border-bottom: 1px solid rgba(245,245,243,0.12);">
-          <div class="container py-3">
-            <form action="{% url 'search' %}" method="get" class="d-flex">
-              <input type="text" name="query" class="form-control me-2" placeholder="Хайх...">
-              <button type="submit" class="btn btn-dark">Хайх</button>
-            </form>
-          </div>
+        {% comment %}
+        Full-screen search overlay (ZHA-style): dark blurred backdrop, a
+        single large underline input, live JSON-backed results below it.
+        Markup lives in base.html since the trigger is in the shared navbar.
+        {% endcomment %}
+        <div class="search-overlay" id="searchOverlay" role="dialog" aria-modal="true" aria-label="Сайтаас хайх" aria-hidden="true" data-suggest-url="{% url 'search_suggest' %}" data-search-url="{% url 'search' %}">
+            <button type="button" class="search-overlay-close" id="searchOverlayClose" aria-label="Хайлт хаах">&times;</button>
+            <div class="search-overlay-inner">
+                <label for="searchOverlayInput" class="visually-hidden">Хайх түлхүүр үг</label>
+                <input type="text" id="searchOverlayInput" class="search-overlay-input" placeholder="Хайх..." autocomplete="off" spellcheck="false">
+                <div class="search-overlay-results" id="searchOverlayResults" role="listbox" aria-label="Хайлтын үр дүн"></div>
+                <div class="search-overlay-status visually-hidden" id="searchOverlayStatus" aria-live="polite"></div>
+            </div>
         </div>
 
         {% block content %}{% endblock %}
@@ -434,6 +440,155 @@
                 }
             }
             if (reduceMotion) runHeroSequence();
+
+            // ---- Full-screen search overlay ----
+            (function () {
+                var trigger = document.getElementById('searchTrigger');
+                var overlay = document.getElementById('searchOverlay');
+                if (!trigger || !overlay) return;
+
+                var closeBtn = document.getElementById('searchOverlayClose');
+                var input = document.getElementById('searchOverlayInput');
+                var resultsEl = document.getElementById('searchOverlayResults');
+                var statusEl = document.getElementById('searchOverlayStatus');
+                var suggestUrl = overlay.dataset.suggestUrl || '/search/suggest/';
+                var searchUrl = overlay.dataset.searchUrl || '/search/';
+                var debounceTimer = null;
+                var activeIndex = -1;
+                var currentItems = [];
+                var lastController = null;
+
+                function openOverlay() {
+                    overlay.classList.add('is-open');
+                    overlay.setAttribute('aria-hidden', 'false');
+                    trigger.setAttribute('aria-expanded', 'true');
+                    document.body.style.overflow = 'hidden';
+                    // focus after the CSS transition starts so iOS/Android
+                    // don't fight the overlay's own opening animation
+                    setTimeout(function () { input.focus(); }, 10);
+                }
+
+                function closeOverlay() {
+                    overlay.classList.remove('is-open');
+                    overlay.setAttribute('aria-hidden', 'true');
+                    trigger.setAttribute('aria-expanded', 'false');
+                    document.body.style.overflow = '';
+                    activeIndex = -1;
+                    setTimeout(function () {
+                        input.value = '';
+                        resultsEl.innerHTML = '';
+                        statusEl.textContent = '';
+                    }, reduceMotion ? 0 : 250); // matches the CSS close duration
+                }
+
+                function highlight(text, query) {
+                    var i = text.toLowerCase().indexOf(query.toLowerCase());
+                    if (i === -1) return text;
+                    return text.slice(0, i) + '<mark>' + text.slice(i, i + query.length) + '</mark>' + text.slice(i + query.length);
+                }
+
+                function renderResults(data, query) {
+                    currentItems = data.results || [];
+                    activeIndex = -1;
+                    resultsEl.innerHTML = '';
+
+                    if (!query) {
+                        statusEl.textContent = '';
+                        return;
+                    }
+
+                    if (!currentItems.length) {
+                        var empty = document.createElement('div');
+                        empty.className = 'search-overlay-empty';
+                        empty.innerHTML = '<p>Илэрц олдсонгүй.</p>';
+                        if (data.popular && data.popular.length) {
+                            var pop = document.createElement('p');
+                            pop.className = 'search-overlay-popular';
+                            pop.textContent = 'Түгээмэл хайлт: ' + data.popular.join(' · ');
+                            empty.appendChild(pop);
+                        }
+                        resultsEl.appendChild(empty);
+                        statusEl.textContent = 'Илэрц олдсонгүй';
+                        return;
+                    }
+
+                    currentItems.forEach(function (item, i) {
+                        var row = document.createElement('a');
+                        row.href = item.url;
+                        row.className = 'search-result-row reveal-on-scroll is-visible';
+                        row.setAttribute('role', 'option');
+                        row.dataset.index = i;
+                        row.style.transitionDelay = (i * 0.03) + 's';
+                        row.innerHTML =
+                            '<span class="search-result-thumb" aria-hidden="true"><i class="bi bi-file-earmark"></i></span>' +
+                            '<span class="search-result-title">' + highlight(item.title, query) + '</span>' +
+                            '<span class="search-result-type">' + item.type + '</span>';
+                        resultsEl.appendChild(row);
+                    });
+                    statusEl.textContent = currentItems.length + ' илэрц олдлоо';
+                }
+
+                function setActive(index) {
+                    var rows = resultsEl.querySelectorAll('.search-result-row');
+                    rows.forEach(function (r) { r.classList.remove('is-active'); });
+                    if (index >= 0 && index < rows.length) {
+                        rows[index].classList.add('is-active');
+                        rows[index].scrollIntoView({ block: 'nearest' });
+                    }
+                    activeIndex = index;
+                }
+
+                function runSearch(query) {
+                    if (lastController) lastController.abort();
+                    lastController = ('AbortController' in window) ? new AbortController() : null;
+                    fetch(suggestUrl + '?query=' + encodeURIComponent(query), {
+                        signal: lastController ? lastController.signal : undefined,
+                    })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) { renderResults(data, query); })
+                        .catch(function () { /* aborted or offline -- ignore */ });
+                }
+
+                trigger.addEventListener('click', openOverlay);
+                closeBtn.addEventListener('click', closeOverlay);
+                overlay.addEventListener('click', function (e) {
+                    if (e.target === overlay) closeOverlay();
+                });
+
+                input.addEventListener('input', function () {
+                    var query = input.value.trim();
+                    clearTimeout(debounceTimer);
+                    if (!query) { renderResults({ results: [] }, ''); return; }
+                    debounceTimer = setTimeout(function () { runSearch(query); }, 280);
+                });
+
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape' && overlay.classList.contains('is-open')) {
+                        closeOverlay();
+                        return;
+                    }
+                    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                        e.preventDefault();
+                        overlay.classList.contains('is-open') ? closeOverlay() : openOverlay();
+                        return;
+                    }
+                    if (!overlay.classList.contains('is-open')) return;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setActive(Math.min(activeIndex + 1, currentItems.length - 1));
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setActive(Math.max(activeIndex - 1, 0));
+                    } else if (e.key === 'Enter') {
+                        if (activeIndex >= 0 && currentItems[activeIndex]) {
+                            window.location.href = currentItems[activeIndex].url;
+                        } else if (input.value.trim()) {
+                            window.location.href = searchUrl + '?query=' + encodeURIComponent(input.value.trim());
+                        }
+                    }
+                });
+            })();
         })();
         </script>
 
