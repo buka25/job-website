@@ -15,6 +15,144 @@
     --dur-hover: 0.7s;
 }
 
+/* ---------- Full-screen search overlay (ZHA-style) ---------- */
+.search-trigger {
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
+    color: var(--text) !important;
+}
+.search-trigger:hover, .search-trigger:focus-visible {
+    opacity: 1;
+}
+
+.search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    height: 100dvh;
+    background: rgba(12, 12, 11, 0.97);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.98);
+    transition: opacity 0.35s var(--ease-expo), transform 0.35s var(--ease-expo), visibility 0s linear 0.35s;
+}
+.search-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+    /* close is intentionally quicker than open (0.25s) -- a standard UX
+       convention where dismissing should feel snappier than presenting */
+    transition: opacity 0.35s var(--ease-expo), transform 0.35s var(--ease-expo), visibility 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+    .search-overlay { transition: opacity 0.2s ease, visibility 0s linear 0.2s; transform: none; }
+    .search-overlay.is-open { transition: opacity 0.2s ease, visibility 0s; }
+}
+
+.search-overlay-close {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-size: 1.5rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.search-overlay-close:hover { border-color: var(--accent); color: var(--accent); }
+
+.search-overlay-inner {
+    width: 100%;
+    max-width: 760px;
+    margin: 12vh auto 4rem;
+    padding: 0 24px;
+}
+
+.search-overlay-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(1.75rem, 4vw, 3rem);
+    font-weight: 300;
+    padding: 0.5rem 0 0.75rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+.search-overlay-input::placeholder { color: var(--text-muted); }
+.search-overlay-input:focus { border-bottom-color: rgba(255, 255, 255, 0.6); }
+
+.search-overlay-results {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.search-result-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 0.5rem;
+    border-radius: 0.5rem;
+    color: var(--text);
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+.search-result-row:hover, .search-result-row.is-active {
+    background: rgba(255, 255, 255, 0.05);
+}
+.search-result-thumb {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border-radius: 0.4rem;
+    background: var(--bg-alt);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+.search-result-title { flex: 1; }
+.search-result-title mark {
+    background: transparent;
+    color: var(--accent);
+    font-weight: 600;
+    padding: 0;
+}
+.search-result-type {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 0.2rem 0.6rem;
+    white-space: nowrap;
+}
+
+.search-overlay-empty { color: var(--text-muted); }
+.search-overlay-popular { font-size: 0.9rem; margin-top: 0.5rem; }
+
+@media (max-width: 480px) {
+    .search-overlay-input { font-size: 1.5rem; }
+    .search-overlay-inner { margin-top: 8vh; }
+}
+
 /* ---------- Base / typography ---------- */
 html, body {
     background: var(--bg);
@@ -324,140 +462,3 @@ body { padding-top: 76px; }
     display: inline-block;
 }
 
-/* ---------- Full-screen search overlay (ZHA-style) ---------- */
-.search-trigger {
-    opacity: 0.85;
-    transition: opacity 0.2s ease;
-    color: var(--text) !important;
-}
-.search-trigger:hover, .search-trigger:focus-visible {
-    opacity: 1;
-}
-
-.search-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 2000;
-    height: 100dvh;
-    background: rgba(12, 12, 11, 0.97);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    overflow-y: auto;
-    opacity: 0;
-    visibility: hidden;
-    transform: scale(0.98);
-    transition: opacity 0.35s var(--ease-expo), transform 0.35s var(--ease-expo), visibility 0s linear 0.35s;
-}
-.search-overlay.is-open {
-    opacity: 1;
-    visibility: visible;
-    transform: scale(1);
-    /* close is intentionally quicker than open (0.25s) -- a standard UX
-       convention where dismissing should feel snappier than presenting */
-    transition: opacity 0.35s var(--ease-expo), transform 0.35s var(--ease-expo), visibility 0s;
-}
-@media (prefers-reduced-motion: reduce) {
-    .search-overlay { transition: opacity 0.2s ease, visibility 0s linear 0.2s; transform: none; }
-    .search-overlay.is-open { transition: opacity 0.2s ease, visibility 0s; }
-}
-
-.search-overlay-close {
-    position: fixed;
-    top: 1.5rem;
-    right: 1.5rem;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text);
-    font-size: 1.5rem;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.search-overlay-close:hover { border-color: var(--accent); color: var(--accent); }
-
-.search-overlay-inner {
-    width: 100%;
-    max-width: 760px;
-    margin: 12vh auto 4rem;
-    padding: 0 24px;
-}
-
-.search-overlay-input {
-    width: 100%;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    font-size: clamp(1.75rem, 4vw, 3rem);
-    font-weight: 300;
-    padding: 0.5rem 0 0.75rem;
-    outline: none;
-    transition: border-color 0.2s ease;
-}
-.search-overlay-input::placeholder { color: var(--text-muted); }
-.search-overlay-input:focus { border-bottom-color: rgba(255, 255, 255, 0.6); }
-
-.search-overlay-results {
-    margin-top: 2rem;
-    display: flex;
-    flex-direction: column;
-}
-
-.search-result-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.9rem 0.5rem;
-    border-radius: 0.5rem;
-    color: var(--text);
-    text-decoration: none;
-    transition: background 0.15s ease;
-}
-.search-result-row:hover, .search-result-row.is-active {
-    background: rgba(255, 255, 255, 0.05);
-}
-.search-result-thumb {
-    width: 40px;
-    height: 40px;
-    flex: 0 0 40px;
-    border-radius: 0.4rem;
-    background: var(--bg-alt);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    font-size: 1.1rem;
-}
-.search-result-title { flex: 1; }
-.search-result-title mark {
-    background: transparent;
-    color: var(--accent);
-    font-weight: 600;
-    padding: 0;
-}
-.search-result-type {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-    border-radius: 1rem;
-    padding: 0.2rem 0.6rem;
-    white-space: nowrap;
-}
-
-.search-overlay-empty { color: var(--text-muted); }
-.search-overlay-popular { font-size: 0.9rem; margin-top: 0.5rem; }
-
-@media (max-width: 480px) {
-    .search-overlay-input { font-size: 1.5rem; }
-    .search-overlay-inner { margin-top: 8vh; }
-}
