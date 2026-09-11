@@ -203,246 +203,44 @@
         {# Global javascript #}
         <script type="text/javascript" src="{% static 'js/jobsite.js' %}"></script>
 
-        <script>
-        (function () {
-            "use strict";
+        {% comment %}
+        The scripts below are deliberately split into independent <script>
+        tags (instead of one giant inline block) and ordered with the
+        highest-priority interactive feature first. Some client network/
+        security software has been observed truncating large local HTTP
+        responses -- when everything lived in a single script, a cut
+        partway through broke the whole block (a syntax error anywhere
+        kills the entire tag), silently disabling features declared
+        *earlier* in the file too. Separate tags contain that failure to
+        just the tag that got cut.
+        {% endcomment %}
 
-            // ---- Guardrails (10): shared feature flags every module below checks ----
+        <script>
+            // ---- Guardrails: shared feature flags + the hero-reveal function,
+            // kept tiny and first so this always survives intact. ----
             var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            var isMobile = window.matchMedia('(max-width: 768px)').matches;
             var hasGSAP = typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined';
             if (hasGSAP) gsap.registerPlugin(ScrollTrigger);
-            var EASE_EXPO = "expo.out"; // cubic-bezier(0.16,1,0.3,1)
-
-            // ---- 9 + 10 (choreography): page-load sequence as one GSAP master
-            // timeline -- logo fade, curtain lift, and the hero's own entrance
-            // are scheduled with overlap ("-=" position params) instead of a
-            // chain of independent setTimeouts, so the handoff between them
-            // reads as one directed sequence rather than three separate cuts.
-            //
-            // Deliberately NOT gated on 'load' or 'DOMContentLoaded': this is
-            // a purely cosmetic intro over an overlay that's already visible
-            // from first paint, so it doesn't need to wait for images/fonts/
-            // third-party scripts to finish -- and gating it on those events
-            // means one slow or CDP-navigated subresource can leave the
-            // curtain stuck forever (confirmed happening in this exact
-            // environment during testing). The timeline's own internal
-            // position offsets (0.6, "-=0.2", ...) provide the pacing instead. ----
-            (function () {
-                var overlay = document.getElementById('pageLoadOverlay');
-                if (!overlay) return;
-                if (reduceMotion) {
-                    overlay.remove();
-                    runHeroSequence();
-                    return;
-                }
-
-                requestAnimationFrame(function () { overlay.classList.add('is-logo-visible'); });
-
-                if (!hasGSAP) {
-                    // Fallback: the original plain setTimeout chain
-                    setTimeout(function () { overlay.classList.remove('is-logo-visible'); }, 600);
-                    setTimeout(function () { overlay.classList.add('is-curtain-up'); }, 600);
-                    setTimeout(function () { overlay.remove(); runHeroSequence(); }, 1000);
-                    return;
-                }
-
-                var logo = overlay.querySelector('.overlay-logo');
-                var hero = document.querySelector('.hero-content');
-                var tl = gsap.timeline();
-
-                tl.to(logo, { opacity: 0, duration: 0.3, ease: "power1.in" }, 0.6)
-                  .to(overlay, {
-                      clipPath: "inset(0 0 100% 0)",
-                      duration: 0.4,
-                      ease: "cubic-bezier(0.65, 0, 0.35, 1)",
-                      onComplete: function () { overlay.remove(); },
-                  }, 0.6);
-
-                if (hero) {
-                    tl.fromTo(hero,
-                        { opacity: 0, y: 30 },
-                        { opacity: 1, y: 0, duration: 1.4, ease: "expo.out", onStart: runHeroSequence },
-                        "-=0.2" // hero begins rising in while the curtain is still finishing
-                    );
-                } else {
-                    tl.call(runHeroSequence, null, "-=0.2");
-                }
-
-                // Failsafe: a stalled tween (throttled tab, low-power device,
-                // reduced frame rate) must never leave the curtain covering
-                // the site indefinitely -- kill the timeline (so it can't keep
-                // fighting our manual override) and force the end-state if it
-                // hasn't finished on its own by 2.5s.
-                setTimeout(function () {
-                    if (tl.progress() >= 1) return; // already finished normally
-                    tl.kill();
-                    if (overlay.isConnected) overlay.remove();
-                    runHeroSequence();
-                    if (hero) { hero.style.opacity = '1'; hero.style.transform = 'none'; }
-                }, 2500);
-            })();
-
-            // ---- 3. Navbar: dynamic state + hide-on-scroll-down, show-on-scroll-up ----
-            // Direction is only trusted once it has held for ~150ms (debounced),
-            // so a single jittery wheel tick can't flicker the bar; the scroll
-            // handler itself is rAF-throttled for performance.
-            (function () {
-                var nav = document.getElementById('siteNavbar');
-                if (!nav) return;
-                var lastY = window.scrollY;
-                var pendingDirection = null;
-                var directionTimer = null;
-                var ticking = false;
-
-                function apply() {
-                    var y = window.scrollY;
-                    nav.classList.toggle('is-scrolled', y > 80);
-
-                    var direction = y > lastY ? 'down' : (y < lastY ? 'up' : null);
-                    lastY = y;
-                    ticking = false;
-                    if (!direction || direction === pendingDirection) return;
-                    pendingDirection = direction;
-
-                    clearTimeout(directionTimer);
-                    directionTimer = setTimeout(function () {
-                        if (direction === 'down' && window.scrollY > 160) {
-                            nav.classList.add('is-hidden');
-                        } else if (direction === 'up') {
-                            nav.classList.remove('is-hidden');
-                        }
-                    }, 150);
-                }
-
-                window.addEventListener('scroll', function () {
-                    if (!ticking) {
-                        requestAnimationFrame(apply);
-                        ticking = true;
-                    }
-                }, { passive: true });
-                apply();
-            })();
-
-            // ---- 1. Scroll-triggered reveal (once, with optional 120ms stagger) ----
-            (function () {
-                document.querySelectorAll('.reveal-stagger').forEach(function (group) {
-                    Array.prototype.forEach.call(group.children, function (child) {
-                        child.classList.add('reveal-on-scroll');
-                    });
-                });
-
-                if (reduceMotion) {
-                    document.querySelectorAll('.reveal-on-scroll').forEach(function (el) {
-                        el.classList.add('is-visible');
-                    });
-                    return;
-                }
-
-                if (hasGSAP) {
-                    document.querySelectorAll('.reveal-stagger').forEach(function (group) {
-                        ScrollTrigger.batch(group.children, {
-                            start: "top 80%",
-                            once: true,
-                            onEnter: function (batch) {
-                                gsap.to(batch, {
-                                    opacity: 1, y: 0, filter: "blur(0px)",
-                                    duration: 1.1, ease: EASE_EXPO, stagger: 0.12,
-                                    onStart: function () { batch.forEach(function (el) { el.style.willChange = 'transform, opacity, filter'; }); },
-                                    onComplete: function () { batch.forEach(function (el) { el.style.willChange = 'auto'; }); },
-                                });
-                            },
-                        });
-                    });
-                    document.querySelectorAll('.reveal-on-scroll').forEach(function (el) {
-                        if (el.closest('.reveal-stagger')) return;
-                        ScrollTrigger.create({
-                            trigger: el, start: "top 80%", once: true,
-                            onEnter: function () {
-                                gsap.to(el, {
-                                    opacity: 1, y: 0, filter: "blur(0px)", duration: 1.1, ease: EASE_EXPO,
-                                    onStart: function () { el.style.willChange = 'transform, opacity, filter'; },
-                                    onComplete: function () { el.style.willChange = 'auto'; },
-                                });
-                            },
-                        });
-                    });
-                    return;
-                }
-
-                // Fallback: no GSAP -- plain Intersection Observer, CSS drives the transition
-                document.querySelectorAll('.reveal-stagger').forEach(function (group) {
-                    Array.prototype.forEach.call(group.children, function (child, i) {
-                        child.style.transitionDelay = (i * 0.12) + 's';
-                    });
-                });
-                var targets = document.querySelectorAll('.reveal-on-scroll');
-                if (!targets.length) return;
-                if (!('IntersectionObserver' in window)) {
-                    targets.forEach(function (el) { el.classList.add('is-visible'); });
-                    return;
-                }
-                var observer = new IntersectionObserver(function (entries) {
-                    entries.forEach(function (entry) {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add('is-visible');
-                            observer.unobserve(entry.target);
-                        }
-                    });
-                }, { rootMargin: "-20% 0px", threshold: 0 });
-                targets.forEach(function (el) { observer.observe(el); });
-            })();
-
-            // ---- 7. Text reveal: clip-path line-mask, word-by-word (80ms) stagger ----
-            (function () {
-                var els = document.querySelectorAll('.text-reveal');
-                if (!els.length) return;
-                els.forEach(function (el) {
-                    var words = el.textContent.trim().split(/\s+/);
-                    el.textContent = '';
-                    words.forEach(function (word, i) {
-                        var line = document.createElement('span');
-                        line.className = 'text-reveal-line';
-                        var inner = document.createElement('span');
-                        inner.textContent = word + ' ';
-                        inner.style.transitionDelay = (i * 0.08) + 's';
-                        line.appendChild(inner);
-                        el.appendChild(line);
-                    });
-                });
-                if (reduceMotion || !('IntersectionObserver' in window)) {
-                    els.forEach(function (el) { el.classList.add('is-visible'); });
-                    return;
-                }
-                var observer = new IntersectionObserver(function (entries) {
-                    entries.forEach(function (entry) {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add('is-visible');
-                            observer.unobserve(entry.target);
-                        }
-                    });
-                }, { threshold: 0.3 });
-                els.forEach(function (el) { observer.observe(el); });
-            })();
 
             // ---- 5. Hero orchestration: reveal the tagline + scroll cue once the
             // page-load curtain has fully lifted (or immediately under reduced motion) ----
             function runHeroSequence() {
                 if (window.__heroSequenceRan) return;
                 window.__heroSequenceRan = true;
-                // Only add the CSS-transition class on paths where GSAP isn't
-                // already driving the same opacity/transform directly (reduced
-                // motion, or the no-GSAP fallback) -- otherwise the CSS
-                // transition and the GSAP tween would fight over one element.
                 if (reduceMotion || !hasGSAP) {
                     var content = document.querySelector('.hero-content');
                     if (content) content.classList.add('hero-content-ready');
                 }
             }
             if (reduceMotion) runHeroSequence();
+        </script>
 
-            // ---- Full-screen search overlay ----
+        <script>
+            // ---- Full-screen search overlay (kept first among the feature
+            // modules -- this is the one users interact with immediately via
+            // the navbar icon, so it should not depend on any script after it). ----
             (function () {
+                var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 var trigger = document.getElementById('searchTrigger');
                 var overlay = document.getElementById('searchOverlay');
                 if (!trigger || !overlay) return;
@@ -588,6 +386,249 @@
                         }
                     }
                 });
+            })();
+        </script>
+
+        <script>
+        (function () {
+            "use strict";
+
+            var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var hasGSAP = typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined';
+
+            // ---- 9 + 10 (choreography): page-load sequence as one GSAP master
+            // timeline -- logo fade, curtain lift, and the hero's own entrance
+            // are scheduled with overlap ("-=" position params) instead of a
+            // chain of independent setTimeouts, so the handoff between them
+            // reads as one directed sequence rather than three separate cuts.
+            //
+            // Deliberately NOT gated on 'load' or 'DOMContentLoaded': this is
+            // a purely cosmetic intro over an overlay that's already visible
+            // from first paint, so it doesn't need to wait for images/fonts/
+            // third-party scripts to finish -- and gating it on those events
+            // means one slow or CDP-navigated subresource can leave the
+            // curtain stuck forever (confirmed happening in this exact
+            // environment during testing). The timeline's own internal
+            // position offsets (0.6, "-=0.2", ...) provide the pacing instead. ----
+            (function () {
+                var overlay = document.getElementById('pageLoadOverlay');
+                if (!overlay) return;
+                if (reduceMotion) {
+                    overlay.remove();
+                    runHeroSequence();
+                    return;
+                }
+
+                requestAnimationFrame(function () { overlay.classList.add('is-logo-visible'); });
+
+                if (!hasGSAP) {
+                    // Fallback: the original plain setTimeout chain
+                    setTimeout(function () { overlay.classList.remove('is-logo-visible'); }, 600);
+                    setTimeout(function () { overlay.classList.add('is-curtain-up'); }, 600);
+                    setTimeout(function () { overlay.remove(); runHeroSequence(); }, 1000);
+                    return;
+                }
+
+                var logo = overlay.querySelector('.overlay-logo');
+                var hero = document.querySelector('.hero-content');
+                var tl = gsap.timeline();
+
+                tl.to(logo, { opacity: 0, duration: 0.3, ease: "power1.in" }, 0.6)
+                  .to(overlay, {
+                      clipPath: "inset(0 0 100% 0)",
+                      duration: 0.4,
+                      ease: "cubic-bezier(0.65, 0, 0.35, 1)",
+                      onComplete: function () { overlay.remove(); },
+                  }, 0.6);
+
+                if (hero) {
+                    tl.fromTo(hero,
+                        { opacity: 0, y: 30 },
+                        { opacity: 1, y: 0, duration: 1.4, ease: "expo.out", onStart: runHeroSequence },
+                        "-=0.2" // hero begins rising in while the curtain is still finishing
+                    );
+                } else {
+                    tl.call(runHeroSequence, null, "-=0.2");
+                }
+
+                // Failsafe: a stalled tween (throttled tab, low-power device,
+                // reduced frame rate) must never leave the curtain covering
+                // the site indefinitely -- kill the timeline (so it can't keep
+                // fighting our manual override) and force the end-state if it
+                // hasn't finished on its own by 2.5s.
+                setTimeout(function () {
+                    if (tl.progress() >= 1) return; // already finished normally
+                    tl.kill();
+                    if (overlay.isConnected) overlay.remove();
+                    runHeroSequence();
+                    if (hero) { hero.style.opacity = '1'; hero.style.transform = 'none'; }
+                }, 2500);
+            })();
+        })();
+        </script>
+
+        <script>
+        (function () {
+            "use strict";
+
+            // ---- 3. Navbar: dynamic state + hide-on-scroll-down, show-on-scroll-up ----
+            // Direction is only trusted once it has held for ~150ms (debounced),
+            // so a single jittery wheel tick can't flicker the bar; the scroll
+            // handler itself is rAF-throttled for performance.
+            (function () {
+                var nav = document.getElementById('siteNavbar');
+                if (!nav) return;
+                var lastY = window.scrollY;
+                var pendingDirection = null;
+                var directionTimer = null;
+                var ticking = false;
+
+                function apply() {
+                    var y = window.scrollY;
+                    nav.classList.toggle('is-scrolled', y > 80);
+
+                    var direction = y > lastY ? 'down' : (y < lastY ? 'up' : null);
+                    lastY = y;
+                    ticking = false;
+                    if (!direction || direction === pendingDirection) return;
+                    pendingDirection = direction;
+
+                    clearTimeout(directionTimer);
+                    directionTimer = setTimeout(function () {
+                        if (direction === 'down' && window.scrollY > 160) {
+                            nav.classList.add('is-hidden');
+                        } else if (direction === 'up') {
+                            nav.classList.remove('is-hidden');
+                        }
+                    }, 150);
+                }
+
+                window.addEventListener('scroll', function () {
+                    if (!ticking) {
+                        requestAnimationFrame(apply);
+                        ticking = true;
+                    }
+                }, { passive: true });
+                apply();
+            })();
+        })();
+        </script>
+
+        <script>
+        (function () {
+            "use strict";
+
+            var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var hasGSAP = typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined';
+            var EASE_EXPO = "expo.out"; // cubic-bezier(0.16,1,0.3,1)
+
+            // ---- 1. Scroll-triggered reveal (once, with optional 120ms stagger) ----
+            (function () {
+                document.querySelectorAll('.reveal-stagger').forEach(function (group) {
+                    Array.prototype.forEach.call(group.children, function (child) {
+                        child.classList.add('reveal-on-scroll');
+                    });
+                });
+
+                if (reduceMotion) {
+                    document.querySelectorAll('.reveal-on-scroll').forEach(function (el) {
+                        el.classList.add('is-visible');
+                    });
+                    return;
+                }
+
+                if (hasGSAP) {
+                    document.querySelectorAll('.reveal-stagger').forEach(function (group) {
+                        ScrollTrigger.batch(group.children, {
+                            start: "top 80%",
+                            once: true,
+                            onEnter: function (batch) {
+                                gsap.to(batch, {
+                                    opacity: 1, y: 0, filter: "blur(0px)",
+                                    duration: 1.1, ease: EASE_EXPO, stagger: 0.12,
+                                    onStart: function () { batch.forEach(function (el) { el.style.willChange = 'transform, opacity, filter'; }); },
+                                    onComplete: function () { batch.forEach(function (el) { el.style.willChange = 'auto'; }); },
+                                });
+                            },
+                        });
+                    });
+                    document.querySelectorAll('.reveal-on-scroll').forEach(function (el) {
+                        if (el.closest('.reveal-stagger')) return;
+                        ScrollTrigger.create({
+                            trigger: el, start: "top 80%", once: true,
+                            onEnter: function () {
+                                gsap.to(el, {
+                                    opacity: 1, y: 0, filter: "blur(0px)", duration: 1.1, ease: EASE_EXPO,
+                                    onStart: function () { el.style.willChange = 'transform, opacity, filter'; },
+                                    onComplete: function () { el.style.willChange = 'auto'; },
+                                });
+                            },
+                        });
+                    });
+                    return;
+                }
+
+                // Fallback: no GSAP -- plain Intersection Observer, CSS drives the transition
+                document.querySelectorAll('.reveal-stagger').forEach(function (group) {
+                    Array.prototype.forEach.call(group.children, function (child, i) {
+                        child.style.transitionDelay = (i * 0.12) + 's';
+                    });
+                });
+                var targets = document.querySelectorAll('.reveal-on-scroll');
+                if (!targets.length) return;
+                if (!('IntersectionObserver' in window)) {
+                    targets.forEach(function (el) { el.classList.add('is-visible'); });
+                    return;
+                }
+                var observer = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { rootMargin: "-20% 0px", threshold: 0 });
+                targets.forEach(function (el) { observer.observe(el); });
+            })();
+        })();
+        </script>
+
+        <script>
+        (function () {
+            "use strict";
+
+            var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            // ---- 7. Text reveal: clip-path line-mask, word-by-word (80ms) stagger ----
+            (function () {
+                var els = document.querySelectorAll('.text-reveal');
+                if (!els.length) return;
+                els.forEach(function (el) {
+                    var words = el.textContent.trim().split(/\s+/);
+                    el.textContent = '';
+                    words.forEach(function (word, i) {
+                        var line = document.createElement('span');
+                        line.className = 'text-reveal-line';
+                        var inner = document.createElement('span');
+                        inner.textContent = word + ' ';
+                        inner.style.transitionDelay = (i * 0.08) + 's';
+                        line.appendChild(inner);
+                        el.appendChild(line);
+                    });
+                });
+                if (reduceMotion || !('IntersectionObserver' in window)) {
+                    els.forEach(function (el) { el.classList.add('is-visible'); });
+                    return;
+                }
+                var observer = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.3 });
+                els.forEach(function (el) { observer.observe(el); });
             })();
         })();
         </script>
