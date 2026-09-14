@@ -1,7 +1,50 @@
 {% extends "wagtailadmin/login.html" %}
+{% load static %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/wagtail-login.css' %}">
+{% endblock %}
 
 {% block branding_logo %}
-<div class="login-logo" style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 32px; text-align: center;">
-    <span style="color: #5b9fe8;">МАНАЙ</span><span style="color: #e35d75;">КОМПАНИ</span>
+<div class="login-logo">
+    <svg viewBox="0 0 64 64" width="40" height="40" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" focusable="false">
+        <rect width="64" height="64" rx="14" fill="#2F91E2"/>
+        <text x="32" y="45" font-family="'Poppins', Arial, sans-serif" font-size="34" font-weight="700" fill="#fff" text-anchor="middle">M</text>
+    </svg>
+    <span class="login-wordmark">МАНАЙКОМПАНИ</span>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script>
+    (function () {
+        "use strict";
+        var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var list = document.querySelector('.messages ul');
+        if (!list) return;
+
+        function dismiss(item) {
+            if (reduceMotion) { item.remove(); return; }
+            item.classList.add('is-dismissing');
+            setTimeout(function () { item.remove(); }, 300);
+        }
+
+        Array.prototype.forEach.call(list.querySelectorAll('li'), function (item) {
+            var closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'message-close';
+            closeBtn.setAttribute('aria-label', 'Мэдэгдлийг хаах');
+            closeBtn.innerHTML = '&times;';
+            closeBtn.addEventListener('click', function () { dismiss(item); });
+            item.appendChild(closeBtn);
+
+            if (item.classList.contains('success')) {
+                var timer = setTimeout(function () { dismiss(item); }, 6000);
+                item.addEventListener('mouseenter', function () { clearTimeout(timer); });
+            }
+        });
+    })();
+    </script>
 {% endblock %}

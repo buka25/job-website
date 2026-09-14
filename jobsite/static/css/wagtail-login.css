@@ -1,0 +1,155 @@
+/* Custom theme for the Wagtail admin login page.
+   Scoped entirely to body.login so it never touches the rest of the admin. */
+
+body.login {
+    /* Wagtail resolves --w-login-fullscreen-background's var() references
+       at :root, before body.login ever gets a chance to override the
+       colors that feed it -- so overriding --w-color-primary/-secondary
+       here has no effect on it. Replacing the whole gradient directly is
+       the only way to actually change it: brand blue fading to a deep
+       navy, instead of Wagtail's default purple-to-teal. */
+    --w-login-fullscreen-background: radial-gradient(
+        140% 140% at 100% 0%,
+        #4fa8ea 0%,
+        #2f91e2 30%,
+        #1a5b9e 65%,
+        #0f2a4d 100%
+    );
+}
+
+/* ---- Branding lockup: icon + single-color wordmark, moved above the form ---- */
+
+body.login main.content-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+body.login .login-logo {
+    order: -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    width: auto;
+    margin: 0 auto 1.75rem;
+}
+
+body.login .login-logo svg {
+    flex-shrink: 0;
+}
+
+body.login .login-logo .login-wordmark {
+    font-family: 'Poppins', 'Inter', -apple-system, sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    color: #2f91e2;
+    white-space: nowrap;
+}
+
+/* ---- Input focus state: a clearly visible glow, not just the browser default ---- */
+
+body.login .w-field__input input:focus,
+body.login .w-field__input input:focus-visible {
+    /* Wagtail's global :focus-visible{outline:...!important} would
+       otherwise win over a plain outline declaration here regardless of
+       selector specificity -- match it with !important so the login
+       page gets its own brand-colored glow instead of the default teal. */
+    outline: 2px solid #2f91e2 !important;
+    outline-offset: 1px;
+    box-shadow: 0 0 0 4px rgba(47, 145, 226, 0.25);
+    border-color: #2f91e2;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+/* ---- Sign in button: explicit brand-colored hover/active/focus states ---- */
+
+body.login .login-form button[type="submit"] {
+    background-color: #2f91e2;
+    border-color: #2f91e2;
+    color: #fff;
+    font-weight: 600;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+body.login .login-form button[type="submit"]:hover {
+    background-color: #257bc4;
+    border-color: #257bc4;
+}
+
+body.login .login-form button[type="submit"]:active {
+    background-color: #1d63a0;
+    border-color: #1d63a0;
+    transform: translateY(1px);
+}
+
+body.login .login-form button[type="submit"]:focus-visible {
+    outline: 3px solid #8fc4f2;
+    outline-offset: 2px;
+}
+
+/* ---- Messages: room for a close (x) button, plus a dismiss transition ---- */
+
+body.login .messages li {
+    position: relative;
+    padding-right: 2.5rem;
+}
+
+body.login .messages .message-close {
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.75;
+    border-radius: 50%;
+}
+
+body.login .messages .message-close:hover,
+body.login .messages .message-close:focus-visible {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.12);
+}
+
+body.login .messages li {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+body.login .messages li.is-dismissing {
+    opacity: 0;
+    transform: translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.login .messages li {
+        transition: none;
+    }
+}
+
+/* ---- Small screens: keep the card comfortably inside the viewport ---- */
+
+@media (max-width: 420px) {
+    body.login main.content-wrapper {
+        max-width: 100%;
+        margin-left: 1rem;
+        margin-right: 1rem;
+        padding: 1.75rem 1.25rem;
+    }
+
+    body.login .login-logo svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    body.login .login-logo .login-wordmark {
+        font-size: 1.15rem;
+    }
+}
