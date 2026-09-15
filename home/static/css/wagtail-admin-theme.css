@@ -174,17 +174,21 @@ button[type="submit"].button:not(.serious):not(.no-warning):hover {
 .w-dashboard form[role="search"] .w-field__input {
     max-width: 42rem;
     margin: 0 auto;
+}
+
+/* The visible border/background/radius belongs to the <input> itself
+   (core.css draws it there, not on .w-field__input) -- styling the
+   wrapper instead left the input's own square-cornered border showing
+   through inside the pill, producing a double-outline artifact. */
+.w-dashboard form[role="search"] input[type="text"] {
+    height: 2.75rem;
+    font-size: 1rem;
     border-radius: 999px;
     border-width: 2px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.w-dashboard form[role="search"] input {
-    height: 2.75rem;
-    font-size: 1rem;
-}
-
-.w-dashboard form[role="search"] .w-field__input:focus-within {
+.w-dashboard form[role="search"] input[type="text"]:focus {
     border-color: var(--brand-primary);
     box-shadow: 0 0 0 4px rgba(65, 148, 136, 0.2);
 }
