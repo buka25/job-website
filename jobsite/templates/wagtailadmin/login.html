@@ -1,9 +1,19 @@
 {% extends "wagtailadmin/login.html" %}
-{% load static %}
+{% load static i18n %}
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'css/wagtail-login.css' %}">
+    {% comment %}
+    ?v=2: this file has been observed being served from stale browser
+    cache even after a hard refresh (no Cache-Control header is set, so
+    browsers fall back to heuristic freshness) -- bump this whenever
+    the file changes to force a genuinely new request.
+    {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/wagtail-login.css' %}?v=2">
+{% endblock %}
+
+{% block branding_login %}
+<span class="w-sr-only">{% trans "Sign in to Wagtail" %}</span>
 {% endblock %}
 
 {% block branding_logo %}
