@@ -10,10 +10,19 @@
 
 :root {
     --brand-primary: #419488;
+    /* #419488 itself gives white button text only 3.61:1 contrast --
+       fails WCAG AA (4.5:1) for normal-weight 14px button labels. This
+       darker shade is the same hue, just dark enough (4.77:1) to pass;
+       used only where text sits directly on the solid fill. */
+    --brand-primary-strong: #377e74;
     --brand-primary-dark: #2e6b62;
     --brand-primary-light: #5db3a5;
     --brand-live: #3fa66b;
     --brand-draft: #d9a441;
+    --brand-info: #4285f4;
+    --brand-info-text: #9dc0f7;
+    --brand-error: #d93025;
+    --brand-error-text: #f5a199;
 }
 
 /* ---------------------------------------------------------------------
@@ -24,8 +33,8 @@
 
 .button.button-longrunning:not(.serious):not(.no-warning),
 button[type="submit"].button:not(.serious):not(.no-warning) {
-    background-color: var(--brand-primary);
-    border-color: var(--brand-primary);
+    background-color: var(--brand-primary-strong);
+    border-color: var(--brand-primary-strong);
     color: #fff;
 }
 
@@ -50,6 +59,20 @@ button[type="submit"].button:not(.serious):not(.no-warning):hover {
 #wagtail-sidebar .sidebar__inner {
     border-inline-end: 1px solid rgba(65, 148, 136, 0.25);
     box-shadow: 2px 0 12px rgba(0, 0, 0, 0.35);
+}
+
+/* Collapse/expand toggle: Wagtail's own version is fully transparent
+   until hovered, so it's easy to miss. Give it a permanent, subtle
+   outline so it reads as a button at rest, not just on hover. */
+#wagtail-sidebar .sidebar__collapse-toggle,
+#wagtail-sidebar .sidebar-nav-toggle {
+    background-color: rgba(65, 148, 136, 0.14) !important;
+    border-color: rgba(65, 148, 136, 0.4) !important;
+}
+
+#wagtail-sidebar .sidebar__collapse-toggle:hover,
+#wagtail-sidebar .sidebar-nav-toggle:hover {
+    background-color: rgba(65, 148, 136, 0.28) !important;
 }
 
 /* ---------------------------------------------------------------------
@@ -114,11 +137,17 @@ button[type="submit"].button:not(.serious):not(.no-warning):hover {
    5. Dashboard: site summary as counter cards (Pages / Images / Documents).
    --------------------------------------------------------------------- */
 
-.w-summary__list {
+/* core.css's own rule is the compound selector ".w-summary .w-summary__list"
+   (specificity 0,2,0), which beats a bare ".w-summary__list" (0,1,0) --
+   matching that compound form here is what actually lets this win. */
+.w-summary .w-summary__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
     gap: 1rem;
 }
 
 .w-summary__list > li {
+    position: relative;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
@@ -127,14 +156,26 @@ button[type="submit"].button:not(.serious):not(.no-warning):hover {
     background-color: var(--w-color-surface-dashboard-panel, rgba(255, 255, 255, 0.03));
     border: 1px solid var(--w-color-border-furniture);
     border-radius: 8px;
-    min-width: 11rem;
-    flex: 1 1 11rem;
     transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
 .w-summary__list > li:hover {
     border-color: var(--brand-primary);
     transform: translateY(-2px);
+}
+
+/* Make the whole card clickable (not just the text), while keeping a
+   single real link for screen readers/keyboard users -- a "stretched
+   link" overlay instead of a second click handler. */
+.w-summary__list > li a {
+    position: static;
+}
+
+.w-summary__list > li a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
 }
 
 .w-summary__list > li .icon {
@@ -160,12 +201,6 @@ button[type="submit"].button:not(.serious):not(.no-warning):hover {
 .w-summary__list > li:nth-child(1) .icon { background-color: var(--brand-primary); }
 .w-summary__list > li:nth-child(2) .icon { background-color: #b8862f; }
 .w-summary__list > li:nth-child(3) .icon { background-color: #4d72ad; }
-
-@media (max-width: 480px) {
-    .w-summary__list > li {
-        flex: 1 1 100%;
-    }
-}
 
 /* ---------------------------------------------------------------------
    6. Dashboard: bigger, centered search field with an icon transition.
@@ -218,6 +253,14 @@ button[type="submit"].button:not(.serious):not(.no-warning):hover {
     background-color: rgba(65, 148, 136, 0.14);
 }
 
+/* The most important info in each row -- what was edited, and its
+   status -- should read first; give the title more visual weight than
+   the metadata columns around it. */
+.listing--dashboard td.title a {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
 /* Scoped to page-listing tables only (recent edits, the pages explorer,
    page reports, locked pages) so this recolors page live/draft status
    without touching workflow/moderation badges elsewhere, which reuse
@@ -247,24 +290,131 @@ button[type="submit"].button:not(.serious):not(.no-warning):hover {
     color: #f0c479 !important;
 }
 
+/* Finer-grained status colors (scheduled = info blue, expired = error
+   red, live+draft gets a small second dot) than Wagtail's own classes
+   distinguish -- home/static/js/wagtail-admin-theme.js reads each
+   badge's text and sets data-w-status-kind. Progressive enhancement:
+   without JS, badges just keep the live/draft coloring above instead
+   of breaking. */
+.listing-page .w-status[data-w-status-kind="scheduled"],
+.listing.full-width .w-status[data-w-status-kind="scheduled"] {
+    background-color: rgba(66, 133, 244, 0.18) !important;
+    border-color: var(--brand-info) !important;
+    color: var(--brand-info-text) !important;
+}
+
+.listing-page .w-status[data-w-status-kind="expired"],
+.listing.full-width .w-status[data-w-status-kind="expired"] {
+    background-color: rgba(217, 48, 37, 0.18) !important;
+    border-color: var(--brand-error) !important;
+    color: var(--brand-error-text) !important;
+}
+
+.w-status-substatus {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: var(--brand-draft);
+    margin-inline-start: 0.4rem;
+    vertical-align: middle;
+}
+
 /* ---------------------------------------------------------------------
-   8. Small screens: keep the summary cards from feeling cramped, and
-   make sure the (already-responsive) sidebar toggle stays easy to hit.
-   Wagtail's own sidebar already collapses to a hamburger below 50em --
-   this just tidies up what sits next to it.
+   8. Small screens.
+   Wagtail's own sidebar already collapses to a hamburger below 50em
+   (800px) on its own -- that already covers the requested 768px/480px
+   cases, so it's left alone rather than adding a second, possibly
+   conflicting breakpoint for the same behaviour.
    --------------------------------------------------------------------- */
 
-@media (max-width: 50em) {
-    .w-summary__list {
-        flex-direction: column;
-    }
-
-    .w-summary__list > li {
-        flex: 1 1 auto;
-        width: 100%;
+@media (max-width: 768px) {
+    /* Exactly 2 columns at both the tablet and mobile breakpoints,
+       rather than however many auto-fit happens to squeeze in. */
+    .w-summary .w-summary__list {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .w-dashboard form[role="search"] .w-field__input {
         max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    /* "Your most recent edits" as a card list instead of a table, so
+       nothing forces horizontal scrolling. The table markup (and its
+       sr-only header row) is left completely intact for screen
+       readers -- only the visual presentation changes here. */
+    .listing--dashboard,
+    .listing--dashboard tbody,
+    .listing--dashboard tr,
+    .listing--dashboard td {
+        display: block;
+        width: 100%;
+    }
+
+    .listing--dashboard colgroup {
+        display: none;
+    }
+
+    .listing--dashboard tr {
+        margin-bottom: 0.75rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--w-color-border-furniture);
+        border-radius: 8px;
+        background-color: rgba(255, 255, 255, 0.03) !important;
+    }
+
+    .listing--dashboard td {
+        padding: 0.3rem 0;
+        border: none !important;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-align: end;
+    }
+
+    .listing--dashboard td.title {
+        justify-content: flex-start;
+        text-align: start;
+        padding-bottom: 0.5rem;
+        margin-bottom: 0.3rem;
+        border-bottom: 1px solid var(--w-color-border-furniture) !important;
+    }
+
+    /* The privacy/access column is usually empty (most pages aren't
+       private or locked) -- hiding it keeps the common case compact;
+       the rare private/locked page still shows a lock icon inline
+       next to its title elsewhere in the admin. */
+    .listing--dashboard td:nth-child(3) {
+        display: none;
+    }
+
+    .listing--dashboard td:nth-child(2)::before {
+        content: "Хэл";
+        opacity: 0.6;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .listing--dashboard td:nth-child(4)::before {
+        content: "Төлөв";
+        opacity: 0.6;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .listing--dashboard td:nth-child(5)::before {
+        content: "Огноо";
+        opacity: 0.6;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .listing--dashboard td.actions-container {
+        justify-content: flex-end;
+        padding-top: 0.5rem;
+        margin-top: 0.3rem;
+        border-top: 1px solid var(--w-color-border-furniture) !important;
     }
 }

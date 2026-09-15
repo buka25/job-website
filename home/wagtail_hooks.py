@@ -10,3 +10,11 @@ def global_admin_css():
     return format_html(
         '<link rel="stylesheet" href="{}">', static("css/wagtail-admin-theme.css")
     )
+
+
+@hooks.register("insert_global_admin_js")
+def global_admin_js():
+    """Progressive-enhancement JS for finer-grained status badge colors."""
+    return format_html(
+        '<script src="{}"></script>', static("js/wagtail-admin-theme.js")
+    )
