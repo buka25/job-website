@@ -1,0 +1,266 @@
+/*
+ * Custom Wagtail admin theme.
+ * Loaded via the `insert_global_admin_css` hook (home/wagtail_hooks.py),
+ * so it applies across the whole admin -- not just one page.
+ *
+ * Brand primary: #419488 (teal). Used consistently for buttons, badges,
+ * and the active sidebar item, so those three read as "the same kind of
+ * thing" (interactive / selected) at a glance.
+ */
+
+:root {
+    --brand-primary: #419488;
+    --brand-primary-dark: #2e6b62;
+    --brand-primary-light: #5db3a5;
+    --brand-live: #3fa66b;
+    --brand-draft: #d9a441;
+}
+
+/* ---------------------------------------------------------------------
+   1. Buttons: route Wagtail's primary button color through the brand
+   teal, so "Sign in" / "Save draft" / "Publish" etc. all match the
+   active sidebar item and the LIVE badge below.
+   --------------------------------------------------------------------- */
+
+.button.button-longrunning:not(.serious):not(.no-warning),
+button[type="submit"].button:not(.serious):not(.no-warning) {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: #fff;
+}
+
+.button.button-longrunning:not(.serious):not(.no-warning):hover,
+button[type="submit"].button:not(.serious):not(.no-warning):hover {
+    background-color: var(--brand-primary-dark);
+    border-color: var(--brand-primary-dark);
+}
+
+/* ---------------------------------------------------------------------
+   2. Sidebar / main content contrast.
+   --w-color-surface-menus feeds the sidebar's own background (and a few
+   unrelated components like the page-header bar elsewhere in the page)
+   -- scoping the override to #wagtail-sidebar keeps it from touching
+   anything outside the sidebar itself.
+   --------------------------------------------------------------------- */
+
+#wagtail-sidebar {
+    --w-color-surface-menus: #101917;
+}
+
+#wagtail-sidebar .sidebar__inner {
+    border-inline-end: 1px solid rgba(65, 148, 136, 0.25);
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------------------------------------------------------------------
+   3. Sidebar menu items: hover highlight, active state (color + left
+   accent bar), clearer icons.
+   --------------------------------------------------------------------- */
+
+#wagtail-sidebar .sidebar-menu-item__link {
+    border-radius: 0;
+}
+
+#wagtail-sidebar .sidebar-menu-item__link:hover,
+#wagtail-sidebar .sidebar-menu-item__link:focus-visible {
+    background-color: rgba(65, 148, 136, 0.16);
+}
+
+#wagtail-sidebar .sidebar-menu-item--active {
+    background-color: rgba(65, 148, 136, 0.22);
+    border-inline-start-color: var(--brand-primary);
+}
+
+#wagtail-sidebar .sidebar-menu-item--active > a,
+#wagtail-sidebar .sidebar-menu-item--active > button {
+    color: #fff;
+    font-weight: 600;
+}
+
+#wagtail-sidebar .icon--menuitem {
+    opacity: 0.85;
+    transition: opacity 0.15s ease;
+}
+
+#wagtail-sidebar .sidebar-menu-item__link:hover .icon--menuitem,
+#wagtail-sidebar .sidebar-menu-item--active .icon--menuitem {
+    opacity: 1;
+}
+
+#wagtail-sidebar .sidebar-menu-item--active .icon--menuitem {
+    color: var(--brand-primary-light);
+}
+
+/* ---------------------------------------------------------------------
+   4. Account / profile footer: clearly separated from the nav list.
+   --------------------------------------------------------------------- */
+
+#wagtail-sidebar .sidebar-footer {
+    border-top: 1px solid rgba(65, 148, 136, 0.25);
+    background-color: #0b1413;
+}
+
+#wagtail-sidebar .sidebar-footer__account:hover,
+#wagtail-sidebar .sidebar-footer__account:focus-visible {
+    background-color: rgba(65, 148, 136, 0.18) !important;
+}
+
+#wagtail-sidebar .avatar {
+    border: 2px solid var(--brand-primary);
+    border-radius: 50%;
+}
+
+/* ---------------------------------------------------------------------
+   5. Dashboard: site summary as counter cards (Pages / Images / Documents).
+   --------------------------------------------------------------------- */
+
+.w-summary__list {
+    gap: 1rem;
+}
+
+.w-summary__list > li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0;
+    padding: 1.25rem 1.5rem;
+    background-color: var(--w-color-surface-dashboard-panel, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--w-color-border-furniture);
+    border-radius: 8px;
+    min-width: 11rem;
+    flex: 1 1 11rem;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.w-summary__list > li:hover {
+    border-color: var(--brand-primary);
+    transform: translateY(-2px);
+}
+
+.w-summary__list > li .icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.55rem;
+    box-sizing: border-box;
+    border-radius: 50%;
+    color: #fff !important;
+}
+
+.w-summary__list > li a {
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: 0.01em;
+}
+
+.w-summary__list > li a:hover {
+    text-decoration: underline;
+}
+
+.w-summary__list > li:nth-child(1) .icon { background-color: var(--brand-primary); }
+.w-summary__list > li:nth-child(2) .icon { background-color: #b8862f; }
+.w-summary__list > li:nth-child(3) .icon { background-color: #4d72ad; }
+
+@media (max-width: 480px) {
+    .w-summary__list > li {
+        flex: 1 1 100%;
+    }
+}
+
+/* ---------------------------------------------------------------------
+   6. Dashboard: bigger, centered search field with an icon transition.
+   --------------------------------------------------------------------- */
+
+.w-dashboard form[role="search"] .w-field__input {
+    max-width: 42rem;
+    margin: 0 auto;
+    border-radius: 999px;
+    border-width: 2px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.w-dashboard form[role="search"] input {
+    height: 2.75rem;
+    font-size: 1rem;
+}
+
+.w-dashboard form[role="search"] .w-field__input:focus-within {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 4px rgba(65, 148, 136, 0.2);
+}
+
+.w-dashboard form[role="search"] .w-field__icon {
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.w-dashboard form[role="search"] .w-field__input:focus-within .w-field__icon {
+    transform: scale(1.15);
+    color: var(--brand-primary);
+}
+
+/* ---------------------------------------------------------------------
+   7. "Your most recent edits": zebra striping + clearer badges.
+   --------------------------------------------------------------------- */
+
+.listing--dashboard tbody tr {
+    border-top: 1px solid var(--w-color-border-furniture);
+}
+
+.listing--dashboard tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.listing--dashboard tbody tr:hover {
+    background-color: rgba(65, 148, 136, 0.14);
+}
+
+/* Scoped to page-listing tables only (recent edits, the pages explorer,
+   page reports, locked pages) so this recolors page live/draft status
+   without touching workflow/moderation badges elsewhere, which reuse
+   the same base .w-status class for unrelated states (approved/
+   rejected/pending). */
+
+/* Language badge: neutral, clearly distinct from the status badges. */
+.listing-page .w-status--label,
+.listing.full-width .w-status--label {
+    background-color: rgba(120, 144, 156, 0.18) !important;
+    border-color: rgba(120, 144, 156, 0.5) !important;
+    color: #cfd8dc !important;
+}
+
+/* Status badge: live (incl. "live + draft") is green, draft-only is amber. */
+.listing-page .w-status--primary,
+.listing.full-width .w-status--primary {
+    background-color: rgba(63, 166, 107, 0.18) !important;
+    border-color: var(--brand-live) !important;
+    color: #8fe0ac !important;
+}
+
+.listing-page .w-status:not(.w-status--primary):not(.w-status--label),
+.listing.full-width .w-status:not(.w-status--primary):not(.w-status--label) {
+    background-color: rgba(217, 164, 65, 0.18) !important;
+    border-color: var(--brand-draft) !important;
+    color: #f0c479 !important;
+}
+
+/* ---------------------------------------------------------------------
+   8. Small screens: keep the summary cards from feeling cramped, and
+   make sure the (already-responsive) sidebar toggle stays easy to hit.
+   Wagtail's own sidebar already collapses to a hamburger below 50em --
+   this just tidies up what sits next to it.
+   --------------------------------------------------------------------- */
+
+@media (max-width: 50em) {
+    .w-summary__list {
+        flex-direction: column;
+    }
+
+    .w-summary__list > li {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+
+    .w-dashboard form[role="search"] .w-field__input {
+        max-width: 100%;
+    }
+}
