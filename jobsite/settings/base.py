@@ -52,6 +52,11 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Serves collected static files directly from the WSGI app (gunicorn),
+    # so production doesn't depend on a separate nginx/CDN static config.
+    # Harmless in dev too: runserver's own staticfiles app handling takes
+    # priority over it there.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",

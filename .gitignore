@@ -2,6 +2,8 @@
 /media/
 /static/
 *.sqlite3
+jobsite/settings/local.py
+.env
 
 # Python
 __pycache__/
