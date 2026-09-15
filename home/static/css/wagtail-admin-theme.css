@@ -202,6 +202,14 @@ button[type="submit"].button:not(.serious):not(.no-warning):hover {
 .w-summary__list > li:nth-child(2) .icon { background-color: #b8862f; }
 .w-summary__list > li:nth-child(3) .icon { background-color: #4d72ad; }
 
+/* Hide the "Wagtail X.Y editor guide" link next to the account avatar
+   -- hide its whole <li>, not just the link, so no empty bullet/gap is
+   left behind. Matched by href rather than a class, since the link
+   always points to guide.wagtail.org regardless of Wagtail version. */
+.w-dashboard li:has(> a[href*="guide.wagtail.org"]) {
+    display: none;
+}
+
 /* ---------------------------------------------------------------------
    6. Dashboard: bigger, centered search field with an icon transition.
    --------------------------------------------------------------------- */
