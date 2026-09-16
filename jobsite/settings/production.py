@@ -1,8 +1,21 @@
 import os
 
+import dj_database_url
+
 from .base import *
 
 DEBUG = False
+
+# Railway (and most other Postgres-providing PaaS) injects DATABASE_URL
+# automatically once a Postgres service is attached -- nothing to set
+# manually there. Falls back to the inherited SQLite config from
+# base.py when it's absent, so this same settings module still works
+# for a VPS deploy that keeps SQLite.
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    }
 
 # SECRET_KEY has no fallback on purpose: the app must refuse to start
 # rather than silently run production traffic on a leaked/example key.

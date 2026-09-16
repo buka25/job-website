@@ -48,6 +48,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # Required by wagtail.search's database backend whenever the DB is
+    # Postgres (it uses SearchVectorField for full-text search there) --
+    # harmless to always have installed even when running on SQLite.
+    "django.contrib.postgres",
 ]
 
 MIDDLEWARE = [

@@ -4,3 +4,5 @@ wagtail>=7.4,<7.5
 # Production deployment
 gunicorn>=23,<24
 whitenoise>=6,<7
+psycopg[binary]>=3,<4
+dj-database-url>=2,<3
