@@ -1,1 +1,1 @@
-web: python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn jobsite.wsgi:application --bind 0.0.0.0:$PORT
+web: python manage.py migrate --noinput && echo "MIGRATE_DONE" && python manage.py collectstatic --noinput --verbosity 2 && echo "COLLECTSTATIC_DONE" && gunicorn jobsite.wsgi:application --bind 0.0.0.0:$PORT --log-level debug
