@@ -4,7 +4,12 @@ import dj_database_url
 
 from .base import *
 
-DEBUG = False
+# Controllable via env var (defaults to off) so DEBUG can be flipped on
+# temporarily from the hosting platform's dashboard to see a real
+# traceback in the browser while diagnosing a 500, without a deploy.
+# Turn it back off once done -- a debug page leaks settings, source
+# snippets, and request data to anyone who can reach the URL.
+DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
 
 # Railway (and most other Postgres-providing PaaS) injects DATABASE_URL
 # automatically once a Postgres service is attached -- nothing to set
