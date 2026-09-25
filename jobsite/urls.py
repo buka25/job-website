@@ -18,12 +18,20 @@ urlpatterns = [
 
 
 if settings.DEBUG:
-    from django.conf.urls.static import static
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
-    # Serve static and media files from development server
+    # Serve static files from the development server -- WhiteNoise
+    # (see MIDDLEWARE) handles this in production instead.
     urlpatterns += staticfiles_urlpatterns()
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Media (user-uploaded images/documents) has no dedicated object storage
+# (S3, etc.) configured, so it's served directly by the app in every
+# environment, not just DEBUG -- otherwise production would 404 on
+# every uploaded file. Fine at this site's scale; revisit if traffic
+# or storage needs grow enough to warrant a CDN/S3.
+from django.conf.urls.static import static  # noqa: E402
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns = urlpatterns + i18n_patterns(
     path("search/", search_views.search, name="search"),
