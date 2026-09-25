@@ -1,3 +1,4 @@
+import os
 import shutil
 from pathlib import Path
 
@@ -23,6 +24,17 @@ class Command(BaseCommand):
         if not seed_dir.is_dir():
             self.stdout.write(self.style.WARNING(f"No seed directory at {seed_dir}, skipping."))
             return
+
+        # One-time diagnostic for the "PermissionError creating a
+        # subdirectory under a mounted Volume" issue -- there's no shell
+        # access to the container, so this is the only way to see the
+        # mount's actual ownership/mode.
+        if hasattr(os, "getuid") and media_root.exists():
+            st = media_root.stat()
+            self.stdout.write(
+                f"seed_media: running as uid={os.getuid()} gid={os.getgid()}; "
+                f"media_root owned by uid={st.st_uid} gid={st.st_gid} mode={oct(st.st_mode)}"
+            )
 
         copied = 0
         skipped = 0
