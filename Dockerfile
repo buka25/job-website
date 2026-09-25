@@ -68,19 +68,28 @@ RUN chown wagtail:wagtail /app
 # Copy the source code of the project into the container.
 COPY --chown=wagtail:wagtail . .
 
-# Use user "wagtail" to run the build commands below and the server itself.
+# Use user "wagtail" to run the build commands below.
 USER wagtail
 
 # Collect static files.
 RUN python manage.py collectstatic --noinput --clear
 
-# Runtime command that executes when "docker run" is called, it does the
-# following:
-#   1. Migrate the database.
-#   2. Start the application server.
+# The entrypoint needs to start as root (see docker-entrypoint.sh) to fix
+# the ownership of a persistent volume mounted over /app/media at deploy
+# time (e.g. a Railway Volume, which comes back owned by root regardless
+# of the wagtail:wagtail ownership baked into the image above) before it
+# drops down to the unprivileged "wagtail" user for migrate/collectstatic/
+# gunicorn -- the actual app process never runs as root.
+USER root
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Runtime command that executes when "docker run" is called. See
+# docker-entrypoint.sh for what it does (fix /app/media ownership, seed
+# media, migrate, collectstatic, start gunicorn) and why.
 # WARNING:
 #   Migrating database at the same time as starting the server IS NOT THE BEST
 #   PRACTICE. The database should be migrated manually or using the release
 #   phase facilities of your hosting platform. This is used only so the
 #   Wagtail instance can be started with a simple "docker run" command.
-CMD set -xe; python manage.py migrate --noinput; gunicorn jobsite.wsgi:application
+CMD ["/usr/local/bin/docker-entrypoint.sh"]
