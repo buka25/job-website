@@ -26,6 +26,7 @@ class Command(BaseCommand):
 
         copied = 0
         skipped = 0
+        failed = 0
         for source in seed_dir.rglob("*"):
             if source.is_dir():
                 continue
@@ -34,13 +35,23 @@ class Command(BaseCommand):
             if destination.exists():
                 skipped += 1
                 continue
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, destination)
-            copied += 1
+            try:
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+                copied += 1
+            except OSError as exc:
+                # Never let a media-seeding hiccup (e.g. a volume mount
+                # that doesn't grant this user permission to create new
+                # subdirectories) block app startup -- this step is a
+                # nice-to-have, and the app must still boot without it.
+                failed += 1
+                self.stderr.write(
+                    self.style.WARNING(f"seed_media: could not write {destination}: {exc}")
+                )
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"seed_media: copied {copied} file(s), skipped {skipped} already-present file(s). "
-                f"seed_dir={seed_dir} media_root={media_root}"
+                f"seed_media: copied {copied} file(s), skipped {skipped} already-present file(s), "
+                f"failed {failed} file(s). seed_dir={seed_dir} media_root={media_root}"
             )
         )
