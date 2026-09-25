@@ -77,15 +77,18 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "true").lower() == "true"
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "webmaster@localhost")
 
-# ManifestStaticFilesStorage is recommended in production, to prevent
-# outdated JavaScript / CSS assets being served from cache
-# (e.g. after a Wagtail upgrade). WhiteNoise's variant additionally
-# gzip/brotli-compresses files and serves them straight from gunicorn,
-# so a separate nginx static-file config isn't required.
-# See https://docs.djangoproject.com/en/6.1/ref/contrib/staticfiles/#manifeststaticfilesstorage
-STORAGES["staticfiles"]["BACKEND"] = (
-    "whitenoise.storage.CompressedManifestStaticFilesStorage"
-)
+# The Manifest variant (hashed filenames + a staticfiles.json manifest)
+# is usually recommended, but it hard-fails every request with
+# ValueError: Missing staticfiles manifest entry the moment collectstatic
+# hasn't produced a fully consistent manifest for *any* reason -- which
+# is exactly what happened here (confirmed in production logs: every
+# request to "/" 500'd on "Missing staticfiles manifest entry for
+# 'css/jobsite.css'", even though the Procfile's collectstatic step
+# reported success). The plain Compressed storage still gzip/brotli
+# -compresses everything WhiteNoise serves; it just skips the
+# hashed-filename/manifest layer, so a stale browser cache after a
+# future deploy is the worst case -- not a site-wide outage.
+STORAGES["staticfiles"]["BACKEND"] = "whitenoise.storage.CompressedStaticFilesStorage"
 
 # ---- Logging ----
 # Sends Django's own error/warning output to stdout/stderr, which every
